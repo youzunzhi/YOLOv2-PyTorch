@@ -44,7 +44,7 @@ class YOLOv2Model(object):
             elif layer_def['type'] == 'route':
                 x = torch.cat([layer_outputs[int(layer_i)] for layer_i in layer_def["layers"].split(",")], 1)
             elif layer_def['type'] == 'region':
-                output = layer(x)
+                output = layer(x, use_cuda=self.cfg.USE_CUDA)
 
             layer_outputs.append(x)
 

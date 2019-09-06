@@ -61,7 +61,7 @@ class RegionLayer(nn.Module):
 
         self.metrics = {}
 
-    def forward(self, x, seen=0, targets=None):
+    def forward(self, x, seen=0, targets=None, use_cuda=False):
 
         num_samples = x.size(0)
         grid_size = x.size(2)
@@ -87,6 +87,11 @@ class RegionLayer(nn.Module):
         grid_y = torch.arange(g).repeat(g, 1).t().view([1, 1, g, g]).type(torch.FloatTensor)  # 1,1,H,W
         anchor_w = torch.FloatTensor(self.anchors).index_select(1, torch.LongTensor([0])).view(1, self.num_anchors, 1, 1)
         anchor_h = torch.FloatTensor(self.anchors).index_select(1, torch.LongTensor([1])).view(1, self.num_anchors, 1, 1)
+        if use_cuda:
+            grid_x = grid_x.cuda()
+            grid_y = grid_y.cuda()
+            anchor_w = anchor_w.cuda()
+            anchor_h = anchor_h.cuda()
 
         pred_boxes[..., 0] = x + grid_x
         pred_boxes[..., 1] = y + grid_y
