@@ -1,0 +1,31 @@
+import argparse, time, os, torch
+from cfg.config import cfg
+from model import YOLOv2Model
+
+
+
+def main():
+    parser = argparse.ArgumentParser(description="YOLOv2 Detection")
+    parser.add_argument("--config_file", default="cfg/detect.yml", help="path to config file", type=str)
+    parser.add_argument("opts", help="Modify config cfg using the command-line", default=None,
+                        nargs=argparse.REMAINDER)
+    args = parser.parse_args()
+
+    if args.config_file != "":
+        cfg.merge_from_file(args.config_file)
+    cfg.merge_from_list(args.opts)
+    time_string = '[{}]'.format(time.strftime('%Y-%m-%d-%X', time.localtime(time.time())))
+    cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, time_string)
+    cfg.freeze()
+
+    img_path = 'data/samples/herd_of_horses.jpg'
+
+    model = YOLOv2Model(cfg)
+
+    model.detect(img_path)
+
+
+
+
+if __name__ == '__main__':
+    main()

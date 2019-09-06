@@ -1,0 +1,1 @@
+2019-08-28 15:54:42,751 YOLOv2 INFO: Namespace(batch_size=32, conf_thresh=0.25, data_cfg='./cfg/voc.data', debug=False, eval_interval=1, gpu='2', model_cfg='./cfg/yolov2-voc.cfg', multiscale_training=True, n_cpu=8, nms_thresh=0.4, output_dir='./runs/[2019-08-28-15:54:42]', pretrained_weights='weights/yolov2-tiny-voc.weights', save_interval=1, total_epochs=160, use_cuda=False)
