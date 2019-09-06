@@ -10,7 +10,8 @@ def main():
     parser.add_argument("opts", help="Modify config cfg using the command-line", default=None,
                         nargs=argparse.REMAINDER)
     args = parser.parse_args()
-
+    import pydevd_pycharm
+    pydevd_pycharm.settrace('169.254.253.52', port=12345, stdoutToServer=True, stderrToServer=True)
     if args.config_file != "":
         cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
