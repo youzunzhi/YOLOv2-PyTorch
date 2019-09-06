@@ -64,7 +64,7 @@ class RegionLayer(nn.Module):
     def forward(self, x, seen=0, targets=None, use_cuda=False):
 
         num_samples = x.size(0)
-        grid_size = x.size(2)
+        grid_size = x.size(2).cpu()
 
         prediction = (
             x.view(num_samples, self.num_anchors, self.num_classes + 5, grid_size, grid_size)
@@ -92,6 +92,7 @@ class RegionLayer(nn.Module):
             grid_y = grid_y.cuda()
             anchor_w = anchor_w.cuda()
             anchor_h = anchor_h.cuda()
+
 
         pred_boxes[..., 0] = x + grid_x
         pred_boxes[..., 1] = y + grid_y
