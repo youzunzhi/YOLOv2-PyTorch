@@ -11,7 +11,7 @@ def main():
                         nargs=argparse.REMAINDER)
     args = parser.parse_args()
     import pydevd_pycharm
-    pydevd_pycharm.settrace('140.113.138.32', port=12345, stdoutToServer=True, stderrToServer=True)
+    pydevd_pycharm.settrace('172.18.104.10', port=12345, stdoutToServer=True, stderrToServer=True)
     if args.config_file != "":
         cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
