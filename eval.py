@@ -15,6 +15,9 @@ def main():
     if args.config_file != "":
         cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
+    if cfg.USE_CUDA:
+        os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
+
     time_string = '[{}]'.format(time.strftime('%Y-%m-%d-%X', time.localtime(time.time())))
     cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, time_string)
     cfg.freeze()
