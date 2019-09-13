@@ -88,6 +88,7 @@ class RegionLayer(nn.Module):
         anchor_w = torch.FloatTensor(self.anchors).index_select(1, torch.LongTensor([0])).view(1, self.num_anchors, 1, 1)
         anchor_h = torch.FloatTensor(self.anchors).index_select(1, torch.LongTensor([1])).view(1, self.num_anchors, 1, 1)
         if use_cuda:
+            pred_boxes = pred_boxes.cuda()
             grid_x = grid_x.cuda()
             grid_y = grid_y.cuda()
             anchor_w = anchor_w.cuda()
