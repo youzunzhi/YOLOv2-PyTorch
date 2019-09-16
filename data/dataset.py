@@ -34,7 +34,7 @@ class YOLOv2Dataset(Dataset):
         self.img_size = 416
         self.training = training
         if training:
-            self.multiscale = cfg.multiscale_training
+            self.multiscale = cfg.MULTISCALE
             if self.multiscale:
                 self.multiscale_interval = 10
                 self.min_scale = 10 * 32
@@ -51,7 +51,7 @@ class YOLOv2Dataset(Dataset):
             targets = torch.zeros((len(boxes), 6))
             targets[:, 1:] = boxes
         else:
-            print(label_path)
+            # print(label_path)
             targets = torch.zeros((0, 6))
         if self.training:
             img, boxes = data_augmentation(img, boxes, self.jitter, self.hue, self.saturation, self.exposure)
@@ -91,13 +91,13 @@ class YOLOv2Dataset(Dataset):
                 key, value = line.split("=")
                 key = key.strip()
                 if key == 'jitter':
-                    jitter = value.strip()
+                    jitter = float(value.strip())
                 elif key == 'saturation':
-                    saturation = value.strip()
+                    saturation = float(value.strip())
                 elif key == 'exposure':
-                    exposure = value.strip()
+                    exposure = float(value.strip())
                 elif key == 'hue':
-                    hue = value.strip()
+                    hue = float(value.strip())
 
         return jitter, saturation, exposure, hue
 

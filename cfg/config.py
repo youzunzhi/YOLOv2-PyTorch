@@ -11,6 +11,8 @@ _C.WEIGHTS = "weights/yolov2.weights"
 _C.IMG_SIZE = 416
 # size of each image batch
 _C.BATCH_SIZE = 32
+# if using multi-scale training method or not
+_C.MULTISCALE = True
 # the threshold of non-max suppression algorithm
 _C.NMS_THRESH = 0.4
 # only keep detections with conf higher than conf_thresh

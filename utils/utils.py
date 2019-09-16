@@ -137,4 +137,5 @@ def log_train_progress(epoch, total_epochs, batch_i, total_batch, lr, start_time
 def show_eval_result(metrics, labels):
     true_positives, pred_conf, pred_labels = [np.concatenate(x, 0) for x in list(zip(*metrics))]
     precision, recall, AP, f1, ap_class = ap_per_class(true_positives, pred_conf, pred_labels, labels)
-    print(f"mAP: {AP.mean()}")
+    logger = logging.getLogger('YOLOv2.Eval')
+    logger.info(f"mAP: {AP.mean()}")

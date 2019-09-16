@@ -1,17 +1,16 @@
 import argparse, time, os
 from cfg.config import cfg
+from utils.utils import setup_logger
 from model import YOLOv2Model
 from data import make_dataloader
 
 
 def main():
-    parser = argparse.ArgumentParser(description="YOLOv2 Detection")
-    parser.add_argument("--config_file", default="cfg/eval.yml", help="path to config file", type=str)
+    parser = argparse.ArgumentParser(description="YOLOv2 Train")
+    parser.add_argument("--config_file", default="cfg/train.yml", help="path to config file", type=str)
     parser.add_argument("opts", help="Modify config cfg using the command-line", default=None,
                         nargs=argparse.REMAINDER)
     args = parser.parse_args()
-    import pydevd_pycharm
-    pydevd_pycharm.settrace('172.26.49.75', port=12345, stdoutToServer=True, stderrToServer=True)
     if args.config_file != "":
         cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
@@ -22,10 +21,13 @@ def main():
     cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, time_string)
     cfg.freeze()
 
-    eval_dataloader = make_dataloader(cfg, training=False)
-    model = YOLOv2Model(cfg)
+    logger = setup_logger("YOLOv2", cfg.OUTPUT_DIR, 0)
+    logger.info("Running with config:\n{}".format(cfg))
 
-    model.eval(eval_dataloader)
+    train_dataloader, eval_dataloader = make_dataloader(cfg, training=True)
+    model = YOLOv2Model(cfg, training=True)
+
+    model.train(train_dataloader, eval_dataloader)
 
 
 

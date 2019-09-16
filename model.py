@@ -1,7 +1,3 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 from PIL import Image
 import torchvision.transforms as transforms
 import torch.optim as optim
@@ -23,11 +19,12 @@ class YOLOv2Model(object):
         if training:
             self.seen = 0
             self.header_info = np.array([0, 0, 0, self.seen], dtype=np.int32)
+            self.save_weights_filename_prefix = os.path.join(self.cfg.OUTPUT_DIR, cfg.MODEL_CFG.split('/')[-1].split('.')[0])
 
             self.learning_rate = float(self.hyper_parameters['learning_rate'])
 
             decay = float(self.hyper_parameters['decay'])
-            self.optimizer = optim.SGD(self.modules.parameters(),
+            self.optimizer = optim.SGD(self.network.parameters(),
                                        lr=self.learning_rate/self.batch_size,
                                        momentum=float(self.hyper_parameters['momentum']),
                                        weight_decay=decay*self.batch_size)
@@ -35,7 +32,7 @@ class YOLOv2Model(object):
         pretrained_weights = cfg.WEIGHTS
         self.load_weights(pretrained_weights)
 
-    def __call__(self, imgs, *args, **kwargs):
+    def __call__(self, imgs, targets=None, *args, **kwargs):
         x = imgs
         layer_outputs = []
         for i, (layer_def, layer) in enumerate(zip(self.layer_defs, self.network)):
@@ -44,8 +41,8 @@ class YOLOv2Model(object):
             elif layer_def['type'] == 'route':
                 x = torch.cat([layer_outputs[int(layer_i)] for layer_i in layer_def["layers"].split(",")], 1)
             elif layer_def['type'] == 'region':
-                output = layer(x, use_cuda=self.cfg.USE_CUDA)
-
+                output = layer(x, targets, seen=self.seen, use_cuda=self.cfg.USE_CUDA)
+                self.seen += self.cfg.BATCH_SIZE
             layer_outputs.append(x)
 
         return output
@@ -87,39 +84,36 @@ class YOLOv2Model(object):
 
 
     def train(self, train_dataloader, eval_dataloader):
-        total_epochs = self.options.total_epochs
+        total_epochs = self.cfg.TOTAL_EPOCHS
         self.set_train_state()
-        for epoch in range(total_epochs):
+        for epoch in range(1, total_epochs+1):
             start_time = time.time()
             for batch_i, (imgs, targets, img_path) in enumerate(train_dataloader):
-                if self.options.use_cuda:
-                    inputs = imgs.cuda()
+                if self.cfg.USE_CUDA:
+                    imgs = imgs.cuda()
                     targets = targets.cuda()
-                for module in self.modules[:-1]:
-                    inputs = module(inputs)
-                loss = self.modules[-1](inputs, self.seen, targets)
+                loss = self(imgs, targets)
 
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
 
                 log_train_progress(epoch, total_epochs, batch_i, len(train_dataloader), self.learning_rate, start_time,
-                                   self.modules[-1].metrics)
+                                   self.network[-1].metrics)
+                break
 
-            if epoch % self.options.eval_interval == self.options.eval_interval - 1:
+            if epoch % self.cfg.EVAL_INTERVAL == self.cfg.EVAL_INTERVAL - 1:
                 self.eval(eval_dataloader)
-            if epoch % self.options.save_interval == self.options.save_interval - 1:
-                fname = os.path.join(self.options.save_path, self.save_weights_fname)
-                self.save_weights(fname)
+            if epoch % self.cfg.SAVE_INTERVAL == self.cfg.SAVE_INTERVAL - 1:
+                save_weights_filename_epoch = self.save_weights_filename_prefix + str(epoch) + '.weights'
+                self.save_weights(save_weights_filename_epoch)
             self.adjust_learning_rate(epoch)
 
-        if total_epochs % self.options.eval_interval != self.options.eval_interval - 1:
-            self.logger.print_log("\n---- Evaluating Model ----")
+        if total_epochs % self.cfg.EVAL_INTERVAL == self.cfg.EVAL_INTERVAL - 1:
             self.eval(eval_dataloader)
-        if total_epochs % self.options.save_interval != self.options.save_interval - 1:
-            self.logger.print_log("\n---- Saving Model ----")
-            fname = os.path.join(self.options.save_path, self.save_weights_fname)
-            self.save_weights(fname)
+        if total_epochs % self.cfg.SAVE_INTERVAL == self.cfg.SAVE_INTERVAL - 1:
+            save_weights_filename_epoch = self.save_weights_filename_prefix + str(total_epochs) + '.weights'
+            self.save_weights(save_weights_filename_epoch)
 
 
     def parse_model_cfg(self, model_cfg_path):
@@ -233,7 +227,7 @@ class YOLOv2Model(object):
         # Establish cutoff for loading backbone weights
         cutoff = None
         if "darknet19_448.conv.23" in weights_file:
-            cutoff = 24
+            cutoff = 23
 
         ptr = 0
         for i, (layer_def, layer) in enumerate(zip(self.layer_defs, self.network)):
@@ -274,13 +268,13 @@ class YOLOv2Model(object):
                 conv_layer.weight.data.copy_(conv_w)
                 ptr += num_w
 
-    def save_weights(self, fname, cutoff=-1):
+    def save_weights(self, save_weights_filename, cutoff=-1):
         """
         :param path: path of the new weights file
         :param cutoff: save layers between 0 and cutoff (cutoff == -1 -> all save)
         :return:
         """
-        fp = open(fname, "wb")
+        fp = open(save_weights_filename, "wb")
         self.header_info[3] = self.seen
         self.header_info.tofile(fp)
 
@@ -302,7 +296,7 @@ class YOLOv2Model(object):
 
         fp.close()
         logger = logging.getLogger('YOLOv2.Train')
-        self.logger.print_log('Saved weights to '+fname)
+        logger.info('Saved weights to ' + save_weights_filename)
 
     def set_train_state(self, *names):
         """

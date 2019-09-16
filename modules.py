@@ -51,17 +51,16 @@ class RegionLayer(nn.Module):
         self.num_classes = int(module_def['classes'])
         self.num_anchors = int(module_def['num'])
 
-        # self.object_scale = float(module_def['object_scale'])
-        # self.object_scale = 5
+        self.object_scale = float(module_def['object_scale'])
         self.noobject_scale = float(module_def['noobject_scale'])
-        self.class_scale = 2*float(module_def['class_scale'])
+        self.class_scale = float(module_def['class_scale'])
         self.coord_scale = float(module_def['coord_scale'])
         self.thresh = float(module_def['thresh'])
         self.rescore = int(module_def['rescore'])
 
         self.metrics = {}
 
-    def forward(self, x, seen=0, targets=None, use_cuda=False):
+    def forward(self, x, targets, seen=0, use_cuda=False):
 
         num_samples = x.size(0)
         grid_size = x.size(2)
@@ -78,7 +77,7 @@ class RegionLayer(nn.Module):
         w = prediction[..., 2]  # Width # B,A,H,W
         h = prediction[..., 3]  # Height # B,A,H,W
         pred_conf = torch.sigmoid(prediction[..., 4])  # Conf # B,A,H,W
-        pred_cls = torch.sigmoid(prediction[..., 5:])  # Cls pred. # # B,A,H,W,20
+        pred_cls = torch.sigmoid(prediction[..., 5:])  # Cls pred. # B,A,H,W,20
 
         # Add offset and scale with anchors
         pred_boxes = torch.FloatTensor(prediction[..., :4].shape)  # B,A,H,W,4
@@ -118,16 +117,16 @@ class RegionLayer(nn.Module):
                 targets=targets,
                 anchors=self.anchors,
                 ignore_thresh=self.thresh,
-                seen=seen
+                seen=seen,
+                use_cuda=use_cuda
             )
 
-            coord_mask = coord_mask_scale > 0
             loss_x = nn.MSELoss(reduction='sum')(x * coord_mask_scale**0.5, tx * coord_mask_scale**0.5)
             loss_y = nn.MSELoss(reduction='sum')(y * coord_mask_scale**0.5, ty * coord_mask_scale**0.5)
             loss_w = nn.MSELoss(reduction='sum')(w * coord_mask_scale**0.5, tw * coord_mask_scale**0.5)
             loss_h = nn.MSELoss(reduction='sum')(h * coord_mask_scale**0.5, th * coord_mask_scale**0.5)
             loss_coord = loss_x + loss_y + loss_w + loss_h
-            self.object_scale = noobj_mask.sum() / obj_mask.sum()
+            # self.object_scale = noobj_mask.sum() / obj_mask.sum()
             loss_conf_obj = self.object_scale * nn.MSELoss(reduction='sum')(pred_conf[obj_mask], tconf[obj_mask])
             loss_conf_noobj = self.noobject_scale * nn.MSELoss(reduction='sum')(pred_conf[noobj_mask], tconf[noobj_mask])
             loss_cls = self.class_scale * nn.BCELoss(reduction='sum')(pred_cls[obj_mask], tcls[obj_mask])
@@ -163,10 +162,10 @@ class RegionLayer(nn.Module):
 
             return total_loss
 
-    def build_targets(self, pred_boxes, pred_cls, targets, anchors, ignore_thresh, seen):
+    def build_targets(self, pred_boxes, pred_cls, targets, anchors, ignore_thresh, seen, use_cuda):
 
-        ByteTensor = torch.cuda.ByteTensor
-        FloatTensor = torch.cuda.FloatTensor
+        ByteTensor = torch.cuda.ByteTensor if use_cuda else torch.ByteTensor
+        FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 
         nB = pred_boxes.size(0)
         nA = pred_boxes.size(1)
@@ -209,10 +208,6 @@ class RegionLayer(nn.Module):
         obj_mask[b, best_n, gj, gi] = 1
         noobj_mask[b, best_n, gj, gi] = 0
 
-        # # Set noobj mask to zero where iou exceeds ignore threshold
-        # for i, anchor_ious in enumerate(ious.t()):
-        #     noobj_mask[b[i], anchor_ious > ignore_thres, gj[i], gi[i]] = 0
-
         # Set noobj mask to zero where iou of pred_box and any target box exceeds ignore threshold
         for target_box in target_boxes:
             target_box_repeat = target_box.repeat(nB, nA, nG, nG, 1)
@@ -235,4 +230,5 @@ class RegionLayer(nn.Module):
             tconf = obj_mask.float() * iou_scores # rescore
         else:
             tconf = obj_mask.float()
+
         return iou_scores, class_mask, coord_mask_scale, obj_mask, noobj_mask, tx, ty, tw, th, tcls, tconf
