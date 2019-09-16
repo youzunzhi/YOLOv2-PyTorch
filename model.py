@@ -100,7 +100,6 @@ class YOLOv2Model(object):
 
                 log_train_progress(epoch, total_epochs, batch_i, len(train_dataloader), self.learning_rate, start_time,
                                    self.network[-1].metrics)
-                break
 
             if epoch % self.cfg.EVAL_INTERVAL == self.cfg.EVAL_INTERVAL - 1:
                 self.eval(eval_dataloader)
