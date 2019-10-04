@@ -126,7 +126,7 @@ class RegionLayer(nn.Module):
             loss_w = nn.MSELoss(reduction='sum')(w * coord_mask_scale**0.5, tw * coord_mask_scale**0.5)
             loss_h = nn.MSELoss(reduction='sum')(h * coord_mask_scale**0.5, th * coord_mask_scale**0.5)
             loss_coord = loss_x + loss_y + loss_w + loss_h
-            # self.object_scale = noobj_mask.sum() / obj_mask.sum()
+            self.object_scale = noobj_mask.sum() / obj_mask.sum()
             loss_conf_obj = self.object_scale * nn.MSELoss(reduction='sum')(pred_conf[obj_mask], tconf[obj_mask])
             loss_conf_noobj = self.noobject_scale * nn.MSELoss(reduction='sum')(pred_conf[noobj_mask], tconf[noobj_mask])
             loss_cls = self.class_scale * nn.BCELoss(reduction='sum')(pred_cls[obj_mask], tcls[obj_mask])
