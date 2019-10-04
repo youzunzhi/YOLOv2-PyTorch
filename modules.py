@@ -176,6 +176,7 @@ class RegionLayer(nn.Module):
         # Output tensors
         coord_mask_scale = FloatTensor(nB, nA, nG, nG).fill_(0)
         obj_mask = ByteTensor(nB, nA, nG, nG).fill_(0)
+        print(type(obj_mask))
         noobj_mask = ByteTensor(nB, nA, nG, nG).fill_(1)
         class_mask = FloatTensor(nB, nA, nG, nG).fill_(0)
         iou_scores = FloatTensor(nB, nA, nG, nG).fill_(0)
@@ -206,6 +207,7 @@ class RegionLayer(nn.Module):
         # Set masks
         coord_mask_scale[b, best_n, gj, gi] = (2 - targets[:,4] * targets[:,5]) * self.coord_scale
         obj_mask[b, best_n, gj, gi] = 1
+        print(type(obj_mask))
         noobj_mask[b, best_n, gj, gi] = 0
 
         # Set noobj mask to zero where iou of pred_box and any target box exceeds ignore threshold
@@ -230,5 +232,6 @@ class RegionLayer(nn.Module):
             tconf = obj_mask.float() * iou_scores # rescore
         else:
             tconf = obj_mask.float()
+        print(type(obj_mask))
 
         return iou_scores, class_mask, coord_mask_scale, obj_mask, noobj_mask, tx, ty, tw, th, tcls, tconf
