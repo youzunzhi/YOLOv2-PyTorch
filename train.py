@@ -4,8 +4,9 @@ from utils.utils import setup_logger
 from model import YOLOv2Model
 from data import make_dataloader
 
-
+import warnings
 def main():
+    warnings.simplefilter("always")
     parser = argparse.ArgumentParser(description="YOLOv2 Train")
     parser.add_argument("--config_file", default="cfg/train-voc.yml", help="path to config file", type=str)
     parser.add_argument("opts", help="Modify config cfg using the command-line", default=None,
