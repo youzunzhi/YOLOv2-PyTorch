@@ -164,7 +164,7 @@ class RegionLayer(nn.Module):
 
     def build_targets(self, pred_boxes, pred_cls, targets, anchors, ignore_thresh, seen, use_cuda):
 
-        ByteTensor = torch.cuda.bool if use_cuda else torch.bool
+        ByteTensor = torch.cuda.ByteTensor if use_cuda else torch.ByteTensor
         FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 
         nB = pred_boxes.size(0)
@@ -175,8 +175,8 @@ class RegionLayer(nn.Module):
 
         # Output tensors
         coord_mask_scale = FloatTensor(nB, nA, nG, nG).fill_(0)
-        obj_mask = ByteTensor(nB, nA, nG, nG).fill_(0)
-        noobj_mask = ByteTensor(nB, nA, nG, nG).fill_(1)
+        obj_mask = ByteTensor(nB, nA, nG, nG).fill_(0).bool()
+        noobj_mask = ByteTensor(nB, nA, nG, nG).fill_(1).bool()
         class_mask = FloatTensor(nB, nA, nG, nG).fill_(0)
         iou_scores = FloatTensor(nB, nA, nG, nG).fill_(0)
         tx = FloatTensor(nB, nA, nG, nG).fill_(0)
