@@ -7,7 +7,7 @@ from data import make_dataloader
 
 def main():
     parser = argparse.ArgumentParser(description="YOLOv2 Train")
-    parser.add_argument("--config_file", default="cfg/train.yml", help="path to config file", type=str)
+    parser.add_argument("--config_file", default="cfg/train-voc.yml", help="path to config file", type=str)
     parser.add_argument("opts", help="Modify config cfg using the command-line", default=None,
                         nargs=argparse.REMAINDER)
     args = parser.parse_args()
