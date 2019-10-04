@@ -24,7 +24,7 @@ _C.OUTPUT_DIR = "runs/"
 # use CUDA or not
 _C.USE_CUDA = False
 # GPU device ID
-_C.GPU = '2,3'
+_C.GPU = '0,1'
 # number of cpu threads to use during batch generation
 _C.N_CPU = 8
 # interval of evaluations on validation set
