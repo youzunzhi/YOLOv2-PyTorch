@@ -131,7 +131,6 @@ class RegionLayer(nn.Module):
             loss_conf_noobj = self.noobject_scale * nn.MSELoss(reduction='sum')(pred_conf[noobj_mask], tconf[noobj_mask])
             loss_cls = self.class_scale * nn.BCELoss(reduction='sum')(pred_cls[obj_mask], tcls[obj_mask])
             total_loss = loss_coord + loss_conf_obj + loss_conf_noobj + loss_cls
-            print(type(obj_mask))
 
             # Metrics
             cls_acc = 100 * class_mask[obj_mask].mean()
@@ -144,7 +143,6 @@ class RegionLayer(nn.Module):
             precision = torch.sum(iou50 * detected_mask) / (conf50.sum() + 1e-16)
             recall50 = torch.sum(iou50 * detected_mask) / (obj_mask.sum() + 1e-16)
             recall75 = torch.sum(iou75 * detected_mask) / (obj_mask.sum() + 1e-16)
-            print(type(obj_mask))
 
             self.metrics = {
                 "loss": total_loss.item(),
@@ -166,7 +164,7 @@ class RegionLayer(nn.Module):
 
     def build_targets(self, pred_boxes, pred_cls, targets, anchors, ignore_thresh, seen, use_cuda):
 
-        ByteTensor = torch.cuda.ByteTensor if use_cuda else torch.ByteTensor
+        ByteTensor = torch.cuda.bool if use_cuda else torch.bool
         FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 
         nB = pred_boxes.size(0)
