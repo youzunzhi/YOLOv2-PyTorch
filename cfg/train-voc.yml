@@ -1,6 +1,0 @@
-MODEL_CFG: "cfg/yolov2-voc.cfg"
-DATA_CFG: "cfg/voc.data"
-WEIGHTS: "weights/darknet19_448.conv.23"
-BATCH_SIZE: 64
-N_CPU: 0
-USE_CUDA: True

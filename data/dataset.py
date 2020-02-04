@@ -9,8 +9,8 @@ from torch.utils.data import Dataset
 from utils.utils import parse_data_cfg
 
 class YOLOv2Dataset(Dataset):
-    def __init__(self, cfg, training):
-        self.data_cfg = parse_data_cfg(cfg.DATA_CFG)
+    def __init__(self, cfg_node, model_cfg_fname, training):
+        self.data_cfg = parse_data_cfg(cfg_node.DATA_CFG_FNAME)
         if training:
             path = self.data_cfg["train"]
         else:
@@ -28,18 +28,18 @@ class YOLOv2Dataset(Dataset):
                 for path in self.img_files
             ]
 
-        self.batch_size = cfg.BATCH_SIZE
-        self.n_cpu = cfg.N_CPU
+        self.batch_size = cfg_node.BATCH_SIZE
+        self.n_cpu = cfg_node.N_CPU
         self.batch_count = 0
         self.img_size = 416
         self.training = training
         if training:
-            self.multiscale = cfg.MULTISCALE
+            self.multiscale = cfg_node.MULTISCALE
             if self.multiscale:
                 self.multiscale_interval = 10
                 self.min_scale = 10 * 32
                 self.max_scale = 19 * 32
-        self.jitter, self.saturation, self.exposure, self.hue = self.parse_augmentation_cfg(cfg.MODEL_CFG)
+        self.jitter, self.saturation, self.exposure, self.hue = self.parse_augmentation_cfg(model_cfg_fname)
 
     def __getitem__(self, index):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
@@ -78,11 +78,11 @@ class YOLOv2Dataset(Dataset):
     def __len__(self):
         return len(self.img_files)
 
-    def parse_augmentation_cfg(self, model_cfg_path):
+    def parse_augmentation_cfg(self, model_cfg_fname):
         """
         Parses the darknet layer configuration file and returns values for data augmentation
         """
-        model_cfg_file = open(model_cfg_path, 'r')
+        model_cfg_file = open(model_cfg_fname, 'r')
         lines = model_cfg_file.read().split('\n')
         lines = [x for x in lines if x and not x.startswith('#')]  # get rid of comments
         lines = [x.rstrip().lstrip() for x in lines]  # get rid of fringe whitespaces

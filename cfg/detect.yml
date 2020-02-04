@@ -1,3 +1,0 @@
-MODEL_CFG: "cfg/yolov2.cfg"
-WEIGHTS: "weights/yolov2.weights"
-BATCH_SIZE: 1

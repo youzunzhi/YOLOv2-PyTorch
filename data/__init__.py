@@ -2,7 +2,7 @@ from torch.utils.data import DataLoader
 from .dataset import YOLOv2Dataset
 
 def make_dataloader(cfg, training):
-    eval_dataset = YOLOv2Dataset(cfg, training=False)
+    eval_dataset = YOLOv2Dataset(cfg.DATA, cfg.MODEL_CFG_FNAME, training=False)
     eval_dataloader =  DataLoader(
         eval_dataset,
         batch_size=eval_dataset.batch_size,
