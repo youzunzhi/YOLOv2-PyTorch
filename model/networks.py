@@ -136,7 +136,7 @@ class YOLOv2Network(nn.Module):
                 layer = RegionLayer(layer_def)
             else:
                 assert False, 'unknown type %s' % (layer_def['type'])
-            if self.use_cuda:
+            if self.use_cuda and layer is not None:
                 layer = layer.cuda()
             module_list.append(layer)
             filter_num_list.append(filters)
