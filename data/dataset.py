@@ -39,7 +39,7 @@ class YOLOv2Dataset(Dataset):
                 self.multiscale_interval = 10
                 self.min_scale = 10 * 32
                 self.max_scale = 19 * 32
-        self.jitter, self.saturation, self.exposure, self.hue = self.parse_augmentation_cfg(model_cfg_fname)
+            self.jitter, self.saturation, self.exposure, self.hue = self.parse_augmentation_cfg(model_cfg_fname)
 
     def __getitem__(self, index):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
