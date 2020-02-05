@@ -23,7 +23,7 @@ def prepare_experiment(cfg, log_prefix):
     os.mkdir(cfg.OUTPUT_DIR)
     cfg.freeze()
 
-    logger = setup_logger("DepthPred", cfg.OUTPUT_DIR, 0)
+    logger = setup_logger("YOLOv2", cfg.OUTPUT_DIR, 0)
     logger.info("Running with config:\n{}".format(cfg))
     return cfg
 
@@ -93,8 +93,9 @@ def setup_logger(name, log_path, distributed_rank=0):
     if log_path:
         if not os.path.exists(log_path):
             os.mkdir(log_path)
-        ISOTIMEFORMAT = '%Y-%m-%d-%X'
-        txt_name = '{}.txt'.format(time.strftime(ISOTIMEFORMAT, time.localtime(time.time())))
+        # ISOTIMEFORMAT = '%Y-%m-%d-%X'
+        # txt_name = '{}.txt'.format(time.strftime(ISOTIMEFORMAT, time.localtime(time.time())))
+        txt_name = 'log.txt'
         fh = logging.FileHandler(os.path.join(log_path, txt_name), mode='w')
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
