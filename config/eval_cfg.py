@@ -13,4 +13,4 @@ _C.DATA = CN()
 _C.DATA.DATA_CFG_FNAME = "pjreddie_files/coco.data"
 _C.DATA.BATCH_SIZE = 32
 _C.DATA.MULTISCALE = True
-_C.DATA.N_CPU = 8
+_C.DATA.N_CPU = 0
