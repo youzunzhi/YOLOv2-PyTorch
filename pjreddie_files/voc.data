@@ -1,4 +1,4 @@
 classes= 20
-train  = /home/u2263506/data/voc/train.txt
-valid  = /home/u2263506/data/voc/2007_test.txt
-names = data/voc/voc.names
+train  = data/voc/train.txt
+valid  = data/voc/2007_test.txt
+names = data/voc.names
