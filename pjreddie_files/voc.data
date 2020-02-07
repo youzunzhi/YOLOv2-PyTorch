@@ -1,4 +1,4 @@
 classes= 20
-train  = /home/jovyan/PyTorch-YOLOv3/data/voc/train.txt
-valid  = /home/jovyan/PyTorch-YOLOv3/data/voc/2007_test.txt
+train  = /home/u2263506/data/voc/train.txt
+valid  = /home/u2263506/data/voc/2007_test.txt
 names = data/voc/voc.names

@@ -1,4 +1,4 @@
 classes= 80
-train  = /home/jovyan/PyTorch-YOLOv3/data/coco/trainvalno5k.txt
-valid  = /home/jovyan/PyTorch-YOLOv3/data/coco/5k.txt
-names = data/coco.names
+train  = /work/u2263506/coco/trainvalno5k.txt
+valid  = /work/u2263506/coco/5k.txt
+names = ./data/coco.names
