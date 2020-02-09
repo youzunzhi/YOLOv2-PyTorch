@@ -16,6 +16,21 @@ class YOLOv2Model(object):
         self.use_cuda = torch.cuda.is_available()
         self.network = YOLOv2Network(cfg.MODEL_CFG_FNAME, cfg.WEIGHTS_FNAME, self.use_cuda)
 
+    def detect(self, img_path):
+        self.network.eval()
+
+        img = Image.open(img_path).convert('RGB')
+        img = img.resize((self.cfg.IMG_SIZE, self.cfg.IMG_SIZE))
+        img = transforms.ToTensor()(img)
+        img = torch.stack([img])
+        img_size = get_imgs_size([img_path])
+        img_size = torch.stack([img_size])
+
+        with torch.no_grad():
+            output = self.network(img)
+        predictions = non_max_suppression(output, img_size, self.cfg.CONF_THRESH, self.cfg.NMS_THRESH)
+        draw_detect_box(img_path, predictions[0], parse_data_cfg(self.cfg.DATA_CFG_FNAME)['names'])
+
     def eval(self, eval_dataloader):
         self.network.eval()
         metrics = []
@@ -34,6 +49,7 @@ class YOLOv2Model(object):
                 outputs = self.network(imgs)
             predictions = non_max_suppression(outputs, imgs_size, self.cfg.CONF_THRESH, self.cfg.NMS_THRESH)
             metrics += get_batch_metrics(predictions, targets)
+            break
         show_eval_result(metrics, labels)
 
     def train(self):
