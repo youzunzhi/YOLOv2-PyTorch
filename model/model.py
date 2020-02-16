@@ -37,17 +37,17 @@ class YOLOv2Model(object):
         labels = []
         for batch_i, (imgs, targets, imgs_path) in enumerate(tqdm.tqdm(eval_dataloader, desc="Detecting objects")):
             labels += targets[:, 1].tolist()
-            imgs_size = get_imgs_size(imgs_path)
+            # imgs_size = get_imgs_size(imgs_path)
             # Rescale target
-            targets[:, 2:] = xywh2xyxy(targets[:, 2:])
-            for target in targets:
-                target[2:] *= imgs_size[target[0].long()]
+            # targets[:, 2:] = xywh2xyxy(targets[:, 2:])
+            # for target in targets:
+            #     target[2:] *= imgs_size[target[0].long()]
 
             if self.use_cuda:
                 imgs = imgs.cuda()
             with torch.no_grad():
                 outputs = self.network(imgs)
-            predictions = non_max_suppression(outputs, imgs_size, self.cfg.CONF_THRESH, self.cfg.NMS_THRESH)
+            predictions = non_max_suppression(outputs, self.cfg.CONF_THRESH, self.cfg.NMS_THRESH)
             metrics += get_batch_metrics(predictions, targets)
             if batch_i > 1:
                 break

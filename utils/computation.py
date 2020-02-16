@@ -3,7 +3,7 @@ import numpy as np
 import tqdm
 
 
-def non_max_suppression(model_output, imgs_size, conf_thresh, nms_thresh):
+def non_max_suppression(model_output, conf_thresh, nms_thresh):
     """
     Removes model_output with lower object confidence score than 'conf_thresh' and performs
     Non-Maximum Suppression to further filter model_output.
@@ -12,8 +12,8 @@ def non_max_suppression(model_output, imgs_size, conf_thresh, nms_thresh):
     """
 
     model_output = model_output.cpu()
-    model_output[..., :4] = xywh2xyxy(model_output[..., :4])  # B, 845, 25
-    model_output[:, ..., :4] *= imgs_size.repeat(1,1,model_output.shape[1]).view(model_output.shape[0], model_output.shape[1], 4)
+    # model_output[..., :4] = xywh2xyxy(model_output[..., :4])  # B, 845, 25
+    # model_output[:, ..., :4] *= imgs_size.repeat(1,1,model_output.shape[1]).view(model_output.shape[0], model_output.shape[1], 4)
 
     nms_output = [None for _ in range(len(model_output))]
     for image_i, image_pred in enumerate(model_output):
@@ -31,7 +31,7 @@ def non_max_suppression(model_output, imgs_size, conf_thresh, nms_thresh):
         # Perform non-maximum suppression
         keep_boxes = []
         while detections.size(0):
-            large_overlap = bbox_iou(detections[0, :4].unsqueeze(0), detections[:, :4]) > nms_thresh
+            large_overlap = bbox_iou(detections[0, :4].unsqueeze(0), detections[:, :4], x1y1x2y2=False) > nms_thresh
             label_match = detections[0, -1] == detections[:, -1]
             # Indices of boxes with lower confidence scores, large IOUs and matching labels
             invalid = large_overlap & label_match
@@ -83,7 +83,8 @@ def bbox_iou(box1, box2, x1y1x2y2=True):
     b1_area = (b1_x2 - b1_x1 + 1) * (b1_y2 - b1_y1 + 1)
     b2_area = (b2_x2 - b2_x1 + 1) * (b2_y2 - b2_y1 + 1)
 
-    iou = inter_area / (b1_area + b2_area - inter_area + 1e-16)
+    # iou = inter_area / (b1_area + b2_area - inter_area + 1e-16)
+    iou = inter_area / (b1_area + b2_area - inter_area)
 
     return iou
 
@@ -128,7 +129,7 @@ def get_batch_metrics(predictions, targets):
                 if pred_label not in target_labels:
                     continue
 
-                iou, box_index = bbox_iou(pred_box.unsqueeze(0), target_boxes).max(0)
+                iou, box_index = bbox_iou(pred_box.unsqueeze(0), target_boxes, x1y1x2y2=False).max(0)
                 if iou >= iou_thresh and box_index not in detected_boxes and pred_label == target_labels[box_index]:
                     true_positives[pred_i] = 1
                     detected_boxes += [box_index]
