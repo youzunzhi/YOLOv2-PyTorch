@@ -49,8 +49,8 @@ class YOLOv2Model(object):
                 outputs = self.network(imgs)
             predictions = non_max_suppression(outputs, self.cfg.CONF_THRESH, self.cfg.NMS_THRESH)
             metrics += get_batch_metrics(predictions, targets)
-            if batch_i > 1:
-                break
+            # if batch_i > 1:
+            #     break
         show_eval_result(metrics, labels)
 
     def train(self, train_dataloader):
