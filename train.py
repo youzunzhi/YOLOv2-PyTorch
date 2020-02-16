@@ -1,35 +1,21 @@
 import argparse, time, os
-from cfg.config import cfg
-from utils.utils import setup_logger
-from model import YOLOv2Model
+from config import train_cfg
+from utils.utils import prepare_experiment, handle_keyboard_interruption, handle_other_exception
+from model.model import YOLOv2Model
 from data import make_dataloader
+os.environ["CUDA_VISIBLE_DEVICES"] = train_cfg.CUDA_ID
 
 
 def main():
-    parser = argparse.ArgumentParser(description="YOLOv2 Train")
-    parser.add_argument("--config_file", default="cfg/train-voc.yml", help="path to config file", type=str)
-    parser.add_argument("opts", help="Modify config cfg using the command-line", default=None,
-                        nargs=argparse.REMAINDER)
-    args = parser.parse_args()
-    if args.config_file != "":
-        cfg.merge_from_file(args.config_file)
-    cfg.merge_from_list(args.opts)
-    if cfg.USE_CUDA:
-        os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU
-
-    time_string = '[{}]'.format(time.strftime('%Y-%m-%d-%X', time.localtime(time.time())))
-    cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, time_string)
-    cfg.freeze()
-
-    logger = setup_logger("YOLOv2", cfg.OUTPUT_DIR, 0)
-    logger.info("Running with config:\n{}".format(cfg))
-
-    train_dataloader, eval_dataloader = make_dataloader(cfg, training=True)
-    model = YOLOv2Model(cfg, training=True)
-
-    model.train(train_dataloader, eval_dataloader)
-
-
+    try:
+        cfg = prepare_experiment(train_cfg, 't')
+        model = YOLOv2Model(cfg, training=True)
+        train_dataloader = make_dataloader(cfg, training=True)
+        model.train(train_dataloader)
+    except KeyboardInterrupt:
+        handle_keyboard_interruption(cfg)
+    except:
+        handle_other_exception(cfg)
 
 
 if __name__ == '__main__':

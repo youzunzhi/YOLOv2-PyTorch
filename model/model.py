@@ -49,10 +49,16 @@ class YOLOv2Model(object):
                 outputs = self.network(imgs)
             predictions = non_max_suppression(outputs, imgs_size, self.cfg.CONF_THRESH, self.cfg.NMS_THRESH)
             metrics += get_batch_metrics(predictions, targets)
+            if batch_i > 1:
+                break
         show_eval_result(metrics, labels)
 
-    def train(self):
-        pass
+    def train(self, train_dataloader):
+        total_epochs = self.cfg.TOTAL_EPOCHS
+        self.network.train()
+        for epoch in range(1, total_epochs+1):
+            for batch_i, (imgs, targets, img_path) in enumerate(train_dataloader):
+                pass
 
 
 # class YOLOv2Model_deprecate(object):

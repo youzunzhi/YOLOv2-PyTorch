@@ -22,11 +22,13 @@ class YOLOv2Dataset(Dataset):
                 path.replace("JPEGImages", "labels").replace(".png", ".txt").replace(".jpg", ".txt")
                 for path in self.img_files
             ]
-        else:  # suppose it's COCO
+        elif self.data_cfg['names'].find('coco') != -1:
             self.label_files = [
                 path.replace("images", "labels").replace(".png", ".txt").replace(".jpg", ".txt")
                 for path in self.img_files
             ]
+        else:
+            raise NotImplementedError
 
         self.batch_size = cfg_node.BATCH_SIZE
         self.n_cpu = cfg_node.N_CPU
@@ -100,12 +102,6 @@ class YOLOv2Dataset(Dataset):
                     hue = float(value.strip())
 
         return jitter, saturation, exposure, hue
-
-    # def resize(self, img_path):
-    #     img = Image.open(img_path).convert('RGB')
-    #     img = img.resize((self.img_size, self.img_size))
-    #
-    #     return img
 
 
 def data_augmentation(img, boxes, jitter, hue, saturation, exposure):
@@ -202,6 +198,11 @@ def rand_scale(s):
 
 
 def get_imgs_size(imgs_path):
+    """
+    (w, h, w, h) of imgs_path
+    :param imgs_path:
+    :return: torch.FloatTensor
+    """
     sizes = []
     for img_path in imgs_path:
         img = Image.open(img_path).convert('RGB')

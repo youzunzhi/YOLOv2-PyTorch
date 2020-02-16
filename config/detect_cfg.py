@@ -13,5 +13,5 @@ else:
     _C.DATA_CFG_FNAME = "pjreddie_files/coco-mac.data"
 
 _C.IMG_SIZE = 608
-_C.CONF_THRESH = 0.25
-_C.NMS_THRESH = 0.4
+_C.CONF_THRESH = 0.2
+_C.NMS_THRESH = 0.45

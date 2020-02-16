@@ -14,7 +14,7 @@ def make_dataloader(cfg, training):
     if not training:
         return eval_dataloader
 
-    train_dataset = YOLOv2Dataset(cfg, training=True)
+    train_dataset = YOLOv2Dataset(cfg.DATA, cfg.MODEL_CFG_FNAME, training=True)
     train_dataloader =  DataLoader(
         train_dataset,
         batch_size=train_dataset.batch_size,
