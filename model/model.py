@@ -17,7 +17,7 @@ class YOLOv2Model(object):
         self.network = YOLOv2Network(cfg.MODEL_CFG_FNAME, cfg.WEIGHTS_FNAME, self.use_cuda)
         if training:
             self.save_weights_fname_prefix = os.path.join(self.cfg.OUTPUT_DIR,
-                                                          cfg.MODEL_CFG.split('/')[-1].split('.')[0])
+                                                          cfg.MODEL_CFG_FNAME.split('/')[-1].split('.')[0])
             self.seen = 0
             self.learning_rate = 0.001
             self.optimizer = optim.SGD(self.network.parameters(),

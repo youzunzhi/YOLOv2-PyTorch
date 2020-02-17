@@ -7,10 +7,9 @@ _C.CUDA_ID = '0'
 train_on = 'coco'
 if train_on == 'coco':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2.cfg"
-    _C.WEIGHTS_FNAME = "weights/yolov2.weights"
 elif train_on == 'voc':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-voc.cfg"
-    _C.WEIGHTS_FNAME = "weights/yolov2-voc.weights"
+_C.WEIGHTS_FNAME = "weights/darknet19_448.conv.23"
 _C.CONF_THRESH = 0.2
 _C.NMS_THRESH = 0.4
 _C.EVAL_INTERNAL = 100
