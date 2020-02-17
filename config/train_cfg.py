@@ -23,6 +23,7 @@ if train_on == 'coco':
         _C.DATA.DATA_CFG_FNAME = "pjreddie_files/coco-mac.data"
 elif train_on == 'voc':
     _C.DATA.DATA_CFG_FNAME = "pjreddie_files/voc.data"
+_C.DATA.IMG_SIZE = 608
 _C.DATA.BATCH_SIZE = 64
 _C.DATA.MULTISCALE = True
 _C.DATA.N_CPU = 0
