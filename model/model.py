@@ -62,7 +62,7 @@ class YOLOv2Model(object):
         show_eval_result(metrics, labels)
 
     def train(self, train_dataloader, eval_dataloader):
-        total_epochs = self.cfg.TOTAL_EPOCHS
+        total_epochs = self.cfg.TRAIN.TOTAL_EPOCHS
         self.network.train()
         for epoch in range(1, total_epochs+1):
             start_time = time.time()
