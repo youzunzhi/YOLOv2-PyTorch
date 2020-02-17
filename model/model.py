@@ -76,7 +76,7 @@ class YOLOv2Model(object):
                 loss.backward()
                 self.optimizer.step()
                 log_train_progress(epoch, total_epochs, batch_i, len(train_dataloader), self.learning_rate, start_time,
-                                   self.network[-1].metrics)
+                                   self.network.module_list[-1].metrics)
 
             self.scheduler.step()
             if epoch % self.cfg.EVAL_INTERVAL == self.cfg.EVAL_INTERVAL - 1:
