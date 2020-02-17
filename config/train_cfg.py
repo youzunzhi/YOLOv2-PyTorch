@@ -13,6 +13,8 @@ elif train_on == 'voc':
     _C.WEIGHTS_FNAME = "weights/yolov2-voc.weights"
 _C.CONF_THRESH = 0.2
 _C.NMS_THRESH = 0.4
+_C.EVAL_INTERNAL = 100
+_C.SAVE_INTERNAL = 50
 
 _C.DATA = CN()
 if train_on == 'coco':
@@ -27,4 +29,4 @@ _C.DATA.MULTISCALE = True
 _C.DATA.N_CPU = 0
 
 _C.TRAIN = CN()
-_C.TRAIN.TOTAL_EPOCHS = 120
+_C.TRAIN.TOTAL_EPOCHS = 400

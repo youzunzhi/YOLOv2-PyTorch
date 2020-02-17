@@ -10,8 +10,8 @@ def main():
     try:
         cfg = prepare_experiment(train_cfg, 't')
         model = YOLOv2Model(cfg, training=True)
-        train_dataloader = make_dataloader(cfg, training=True)
-        model.train(train_dataloader)
+        train_dataloader, eval_dataloader = make_dataloader(cfg, training=True)
+        model.train(train_dataloader, eval_dataloader)
     except KeyboardInterrupt:
         handle_keyboard_interruption(cfg)
     except:

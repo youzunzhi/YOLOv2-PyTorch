@@ -33,7 +33,7 @@ class YOLOv2Dataset(Dataset):
         self.batch_size = cfg_node.BATCH_SIZE
         self.n_cpu = cfg_node.N_CPU
         self.batch_count = 0
-        self.img_size = 608
+        self.img_size = cfg_node.IMG_SIZE
         self.training = training
         if training:
             self.multiscale = cfg_node.MULTISCALE

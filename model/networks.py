@@ -78,6 +78,29 @@ class YOLOv2Network(nn.Module):
                 conv_layer.weight.data.copy_(conv_w)
                 ptr += num_w
 
+    def save_weights(self, weights_fname):
+        fp = open(weights_fname, "wb")
+        self.header_info[3] = self.seen
+        self.header_info.tofile(fp)
+
+        # Iterate through layers
+        for i, module in enumerate(self.module_list):
+            if isinstance(module, nn.Conv2d):
+                conv_layer = module
+                if not isinstance(self.module_list[i + 1], nn.BatchNorm2d):
+                    conv_layer.bias.data.cpu().numpy().tofile(fp)
+                    conv_layer.weight.data.cpu().numpy().tofile(fp)
+
+            elif isinstance(module, nn.BatchNorm2d):
+                bn_layer = module
+                bn_layer.bias.data.cpu().numpy().tofile(fp)
+                bn_layer.weight.data.cpu().numpy().tofile(fp)
+                bn_layer.running_mean.data.cpu().numpy().tofile(fp)
+                bn_layer.running_var.data.cpu().numpy().tofile(fp)
+                conv_layer.weight.data.cpu().numpy().tofile(fp)
+
+        fp.close()
+
     def get_module_list(self, model_cfg_path):
         self.layer_defs = self.parse_model_cfg(model_cfg_path)
         hyper_parameters = self.layer_defs.pop(0)

@@ -11,8 +11,8 @@ if eval_on == 'coco':
 elif eval_on == 'voc':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-voc.cfg"
     _C.WEIGHTS_FNAME = "weights/yolov2-voc.weights"
-_C.CONF_THRESH = 0.2
-_C.NMS_THRESH = 0.4
+_C.CONF_THRESH = 0.005
+_C.NMS_THRESH = 0.45
 
 _C.DATA = CN()
 if eval_on == 'coco':
@@ -23,6 +23,7 @@ if eval_on == 'coco':
 
 elif eval_on == 'voc':
     _C.DATA.DATA_CFG_FNAME = "pjreddie_files/voc.data"
+_C.DATA.IMG_SIZE = 608
 _C.DATA.BATCH_SIZE = 1
 _C.DATA.MULTISCALE = False
 _C.DATA.N_CPU = 0
