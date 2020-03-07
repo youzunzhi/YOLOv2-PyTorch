@@ -15,6 +15,7 @@ class YOLOv2Dataset(Dataset):
             path = self.data_cfg["train"]
         else:
             path = self.data_cfg["valid"]
+
         with open(path, "r") as file:
             self.img_files = file.readlines()
         if self.data_cfg['names'].find('voc') != -1:
@@ -50,10 +51,11 @@ class YOLOv2Dataset(Dataset):
         boxes = None
         if os.path.exists(label_path):
             boxes = torch.from_numpy(np.loadtxt(label_path).reshape(-1, 5))
+            img, boxes = pad_img_to_square_and_adjust_boxes(img, boxes)
             targets = torch.zeros((len(boxes), 6))
             targets[:, 1:] = boxes
         else:
-            # print(label_path)
+            # print(label_path, 'not exists')
             targets = torch.zeros((0, 6))
         if self.training:
             img, boxes = data_augmentation(img, boxes, self.jitter, self.hue, self.saturation, self.exposure)
@@ -209,3 +211,37 @@ def get_imgs_size(imgs_path):
         h, w = img.height, img.width
         sizes.append((w, h, w, h))
     return torch.FloatTensor(sizes)
+
+
+def pad_img_to_square_and_adjust_boxes(img, boxes, pad_value=0):
+    _, img_h, img_w = img.shape
+    img, pad = pad_img_to_square(img, pad_value)
+    # box coordinates for unpadded image
+    x1 = img_w * (boxes[:, 1] - boxes[:, 3] / 2)
+    y1 = img_h * (boxes[:, 2] - boxes[:, 4] / 2)
+    x2 = img_w * (boxes[:, 1] + boxes[:, 3] / 2)
+    y2 = img_h * (boxes[:, 2] + boxes[:, 4] / 2)
+    # Adjust boxes by adding pad
+    x1 += pad[0]
+    y1 += pad[2]
+    x2 += pad[1]
+    y2 += pad[3]
+    # Returns normalized (x, y, w, h)
+    _, padded_h, padded_w = img.shape
+    boxes[:, 1] = ((x1 + x2) / 2) / padded_w
+    boxes[:, 2] = ((y1 + y2) / 2) / padded_h
+    boxes[:, 3] *= img_w / padded_w
+    boxes[:, 4] *= img_h / padded_h
+    return img, boxes
+
+def pad_img_to_square(img, pad_value=0):
+    c, h, w = img.shape
+    dim_diff = np.abs(h - w)
+    # (upper / left) padding and (lower / right) padding
+    pad1, pad2 = dim_diff // 2, dim_diff - dim_diff // 2
+    # Determine padding
+    pad = (0, 0, pad1, pad2) if h <= w else (pad1, pad2, 0, 0)
+    # Add padding
+    img = F.pad(img, pad, "constant", value=pad_value)
+
+    return img, pad

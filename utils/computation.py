@@ -98,39 +98,39 @@ def bbox_wh_iou(wh1, wh2):
     return inter_area / union_area
 
 
-def get_batch_metrics(predictions, targets):
+def get_batch_metrics(predictions, batch_targets):
     iou_thresh = 0.5
     batch_metrics = []
-    for sample_i in range(len(predictions)):
+    for i in range(len(predictions)):
 
-        if predictions[sample_i] is None:
+        if predictions[i] is None:
             continue
 
-        prediction = predictions[sample_i]
+        prediction = predictions[i]
         pred_boxes = prediction[:, :4]
         pred_conf = prediction[:, 4]
         pred_labels = prediction[:, -1]
 
         true_positives = np.zeros(pred_boxes.shape[0])
 
-        annotations = targets[targets[:, 0] == sample_i][:, 1:]
-        target_labels = annotations[:, 0] if len(annotations) else []
-        if len(annotations):
+        targets = batch_targets[batch_targets[:, 0] == i][:, 1:]
+        targets_labels = targets[:, 0] if len(targets) else []
+        if len(targets):
             detected_boxes = []
-            target_boxes = annotations[:, 1:]
+            target_boxes = targets[:, 1:]
 
             for pred_i, (pred_box, pred_label) in enumerate(zip(pred_boxes, pred_labels)):
 
                 # If targets are all found then break
-                if len(detected_boxes) == len(annotations):
+                if len(detected_boxes) == len(targets):
                     break
 
-                # Ignore if label is not one of the target labels
-                if pred_label not in target_labels:
+                # Ignore if label is not one of the targets labels
+                if pred_label not in targets_labels:
                     continue
 
                 iou, box_index = bbox_iou(pred_box.unsqueeze(0), target_boxes, x1y1x2y2=False).max(0)
-                if iou >= iou_thresh and box_index not in detected_boxes and pred_label == target_labels[box_index]:
+                if iou >= iou_thresh and box_index not in detected_boxes and pred_label == targets_labels[box_index]:
                     true_positives[pred_i] = 1
                     detected_boxes += [box_index]
         batch_metrics.append([true_positives, pred_conf, pred_labels])
