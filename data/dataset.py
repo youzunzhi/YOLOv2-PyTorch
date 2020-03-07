@@ -59,8 +59,9 @@ class YOLOv2Dataset(Dataset):
             # print(label_path, 'not exists')
             targets = torch.zeros((0, 6))
         if self.training:
-            # TODO: didn't treat img as `Image' now
+            img = transforms.ToPILImage()(img)
             img, boxes = data_augmentation(img, boxes, self.jitter, self.hue, self.saturation, self.exposure)
+            img = transforms.ToTensor()(img)
 
         return img, targets, img_path
 
