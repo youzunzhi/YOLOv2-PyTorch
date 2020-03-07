@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset
 from utils.utils import parse_data_cfg
 
+
 class YOLOv2Dataset(Dataset):
     def __init__(self, cfg_node, model_cfg_fname, training):
         self.data_cfg = parse_data_cfg(cfg_node.DATA_CFG_FNAME)
@@ -47,7 +48,7 @@ class YOLOv2Dataset(Dataset):
     def __getitem__(self, index):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
         label_path = self.label_files[index % len(self.img_files)].rstrip()
-        img = Image.open(img_path).convert('RGB')
+        img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
         boxes = None
         if os.path.exists(label_path):
             boxes = torch.from_numpy(np.loadtxt(label_path).reshape(-1, 5))
@@ -58,6 +59,7 @@ class YOLOv2Dataset(Dataset):
             # print(label_path, 'not exists')
             targets = torch.zeros((0, 6))
         if self.training:
+            # TODO: didn't treat img as `Image' now
             img, boxes = data_augmentation(img, boxes, self.jitter, self.hue, self.saturation, self.exposure)
 
         return img, targets, img_path
