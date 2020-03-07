@@ -76,7 +76,7 @@ class YOLOv2Dataset(Dataset):
         if self.training and self.multiscale and self.batch_count % 10 == 0:
             self.img_size = random.choice(range(self.min_scale, self.max_scale + 1, 32))
         # Resize images to input shape
-        imgs = torch.stack([transforms.ToTensor()(img.resize((self.img_size, self.img_size))) for img in imgs])
+        imgs = torch.stack([F.interpolate(img.unsqueeze(0), size=self.img_size, mode="nearest").squeeze(0) for img in imgs])
         self.batch_count += 1
 
         return imgs, targets, img_paths
