@@ -1,7 +1,7 @@
 import os
 import random
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 import torch
 import torchvision.transforms as transforms
 import torch.nn.functional as F
@@ -48,7 +48,7 @@ class YOLOv2Dataset(Dataset):
     def __getitem__(self, index):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
         label_path = self.label_files[index % len(self.img_files)].rstrip()
-        img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
+        img = Image.open(img_path).convert('RGB')
         boxes = None
         if os.path.exists(label_path):
             boxes = torch.from_numpy(np.loadtxt(label_path).reshape(-1, 5))
@@ -59,10 +59,8 @@ class YOLOv2Dataset(Dataset):
             # print(label_path, 'not exists')
             targets = torch.zeros((0, 6))
         if self.training:
-            # TODO: this makes training really slow
-            img = transforms.ToPILImage()(img)
             img, boxes = data_augmentation(img, boxes, self.jitter, self.hue, self.saturation, self.exposure)
-            img = transforms.ToTensor()(img)
+        img = transforms.ToTensor()(img)
 
         return img, targets, img_path
 
@@ -218,18 +216,18 @@ def get_imgs_size(imgs_path):
 
 
 def pad_img_to_square_and_adjust_boxes(img, boxes, pad_value=0):
-    _, img_h, img_w = img.shape
-    img, pad = pad_img_to_square(img, pad_value)
+    img_h, img_w = img.height, img.width
+    img, border = pad_img_to_square(img, pad_value)
     # box coordinates for unpadded image
     x1 = img_w * (boxes[:, 1] - boxes[:, 3] / 2)
     y1 = img_h * (boxes[:, 2] - boxes[:, 4] / 2)
     x2 = img_w * (boxes[:, 1] + boxes[:, 3] / 2)
     y2 = img_h * (boxes[:, 2] + boxes[:, 4] / 2)
-    # Adjust boxes by adding pad
-    x1 += pad[0]
-    y1 += pad[2]
-    x2 += pad[1]
-    y2 += pad[3]
+    # Adjust boxes by adding border
+    x1 += border[0]
+    y1 += border[1]
+    x2 += border[2]
+    y2 += border[3]
     # Returns normalized (x, y, w, h)
     _, padded_h, padded_w = img.shape
     boxes[:, 1] = ((x1 + x2) / 2) / padded_w
@@ -238,14 +236,15 @@ def pad_img_to_square_and_adjust_boxes(img, boxes, pad_value=0):
     boxes[:, 4] *= img_h / padded_h
     return img, boxes
 
+
 def pad_img_to_square(img, pad_value=0):
     c, h, w = img.shape
     dim_diff = np.abs(h - w)
     # (upper / left) padding and (lower / right) padding
     pad1, pad2 = dim_diff // 2, dim_diff - dim_diff // 2
-    # Determine padding
-    pad = (0, 0, pad1, pad2) if h <= w else (pad1, pad2, 0, 0)
+    # Determine padding (in ImageOps: the order is left-top-right-bottom)
+    border = (0, pad1, 0, pad2) if h <= w else (pad1, 0, pad2, 0)
     # Add padding
-    img = F.pad(img, pad, "constant", value=pad_value)
+    img = ImageOps.expand(img, border=border, fill=pad_value)
 
-    return img, pad
+    return img, border
