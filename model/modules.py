@@ -5,13 +5,15 @@ import torch.nn.functional as F
 from utils.computation import bbox_iou, bbox_wh_iou
 
 
-# class MaxPoolStride1(nn.Module):
-#     def __init__(self):
-#         super(MaxPoolStride1, self).__init__()
-#
-#     def forward(self, x):
-#         x = F.max_pool2d(F.pad(x, (0,1,0,1), mode='replicate'), 2, stride=1)
-#         return x
+class MaxPoolStride1(nn.Module):
+    def __init__(self, kernel_size):
+        super(MaxPoolStride1, self).__init__()
+        self.kernel_size = kernel_size
+
+    def forward(self, x):
+        x = F.max_pool2d(F.pad(x, [0, 1, 0, 1], mode='replicate'), self.kernel_size, stride=1)
+        return x
+
 
 # class EmptyLayer(nn.Module):
 #     """Placeholder for 'route' and 'shortcut' layers"""
@@ -26,19 +28,19 @@ class ReorgLayer(nn.Module):
 
     def forward(self, x):
         stride = self.stride
-        assert(x.data.dim() == 4)
+        assert (x.data.dim() == 4)
         B = x.data.size(0)
         C = x.data.size(1)
         H = x.data.size(2)
         W = x.data.size(3)
-        assert(H % stride == 0)
-        assert(W % stride == 0)
+        assert (H % stride == 0)
+        assert (W % stride == 0)
         ws = stride
         hs = stride
-        x = x.view(B, C, H//hs, hs, W//ws, ws).transpose(3,4).contiguous()
-        x = x.view(B, C, H//hs*W//ws, hs*ws).transpose(2,3).contiguous()
-        x = x.view(B, C, hs*ws, H//hs, W//ws).transpose(1,2).contiguous()
-        x = x.view(B, hs*ws*C, H//hs, W//ws)
+        x = x.view(B, C, H // hs, hs, W // ws, ws).transpose(3, 4).contiguous()
+        x = x.view(B, C, H // hs * W // ws, hs * ws).transpose(2, 3).contiguous()
+        x = x.view(B, C, hs * ws, H // hs, W // ws).transpose(1, 2).contiguous()
+        x = x.view(B, hs * ws * C, H // hs, W // ws)
         return x
 
 
@@ -48,7 +50,8 @@ class RegionLayer(nn.Module):
 
         anchors = module_def['anchors'].split(',')
         self.anchors = [float(i) for i in anchors]
-        self.anchors = [(self.anchors[i], self.anchors[i + 1]) for i in range(0, len(anchors), 2)]  # list of tuple (anchor_w, anchor_h)
+        self.anchors = [(self.anchors[i], self.anchors[i + 1]) for i in
+                        range(0, len(anchors), 2)]  # list of tuple (anchor_w, anchor_h)
         self.num_classes = int(module_def['classes'])
         self.num_anchors = int(module_def['num'])
 
@@ -85,15 +88,16 @@ class RegionLayer(nn.Module):
         g = grid_size
         grid_x = torch.arange(g).repeat(g, 1).view([1, 1, g, g]).type(torch.FloatTensor)  # 1,1,H,W
         grid_y = torch.arange(g).repeat(g, 1).t().view([1, 1, g, g]).type(torch.FloatTensor)  # 1,1,H,W
-        anchor_w = torch.FloatTensor(self.anchors).index_select(1, torch.LongTensor([0])).view(1, self.num_anchors, 1, 1)
-        anchor_h = torch.FloatTensor(self.anchors).index_select(1, torch.LongTensor([1])).view(1, self.num_anchors, 1, 1)
+        anchor_w = torch.FloatTensor(self.anchors).index_select(1, torch.LongTensor([0])).view(1, self.num_anchors, 1,
+                                                                                               1)
+        anchor_h = torch.FloatTensor(self.anchors).index_select(1, torch.LongTensor([1])).view(1, self.num_anchors, 1,
+                                                                                               1)
         if use_cuda:
             pred_boxes = pred_boxes.cuda()
             grid_x = grid_x.cuda()
             grid_y = grid_y.cuda()
             anchor_w = anchor_w.cuda()
             anchor_h = anchor_h.cuda()
-
 
         pred_boxes[..., 0] = x + grid_x
         pred_boxes[..., 1] = y + grid_y
@@ -122,14 +126,15 @@ class RegionLayer(nn.Module):
                 use_cuda=use_cuda
             )
 
-            loss_x = nn.MSELoss(reduction='sum')(x * coord_mask_scale**0.5, tx * coord_mask_scale**0.5)
-            loss_y = nn.MSELoss(reduction='sum')(y * coord_mask_scale**0.5, ty * coord_mask_scale**0.5)
-            loss_w = nn.MSELoss(reduction='sum')(w * coord_mask_scale**0.5, tw * coord_mask_scale**0.5)
-            loss_h = nn.MSELoss(reduction='sum')(h * coord_mask_scale**0.5, th * coord_mask_scale**0.5)
+            loss_x = nn.MSELoss(reduction='sum')(x * coord_mask_scale ** 0.5, tx * coord_mask_scale ** 0.5)
+            loss_y = nn.MSELoss(reduction='sum')(y * coord_mask_scale ** 0.5, ty * coord_mask_scale ** 0.5)
+            loss_w = nn.MSELoss(reduction='sum')(w * coord_mask_scale ** 0.5, tw * coord_mask_scale ** 0.5)
+            loss_h = nn.MSELoss(reduction='sum')(h * coord_mask_scale ** 0.5, th * coord_mask_scale ** 0.5)
             loss_coord = loss_x + loss_y + loss_w + loss_h
             self.object_scale = noobj_mask.sum() / obj_mask.sum()
             loss_conf_obj = self.object_scale * nn.MSELoss(reduction='sum')(pred_conf[obj_mask], tconf[obj_mask])
-            loss_conf_noobj = self.noobject_scale * nn.MSELoss(reduction='sum')(pred_conf[noobj_mask], tconf[noobj_mask])
+            loss_conf_noobj = self.noobject_scale * nn.MSELoss(reduction='sum')(pred_conf[noobj_mask],
+                                                                                tconf[noobj_mask])
             loss_cls = self.class_scale * nn.BCELoss(reduction='sum')(pred_cls[obj_mask], tcls[obj_mask])
             total_loss = loss_coord + loss_conf_obj + loss_conf_noobj + loss_cls
 
@@ -205,7 +210,7 @@ class RegionLayer(nn.Module):
         gw, gh = gwh.t()
         gi, gj = gxy.long().t()
         # Set masks
-        coord_mask_scale[b, best_n, gj, gi] = (2 - targets[:,4] * targets[:,5]) * self.coord_scale
+        coord_mask_scale[b, best_n, gj, gi] = (2 - targets[:, 4] * targets[:, 5]) * self.coord_scale
         obj_mask[b, best_n, gj, gi] = 1
         noobj_mask[b, best_n, gj, gi] = 0
 
@@ -213,7 +218,7 @@ class RegionLayer(nn.Module):
         for target_box in target_boxes:
             target_box_repeat = target_box.repeat(nB, nA, nG, nG, 1)
             pred_ious = bbox_iou(pred_boxes, target_box_repeat, x1y1x2y2=False)
-            noobj_mask[pred_ious>ignore_thresh] = 0
+            noobj_mask[pred_ious > ignore_thresh] = 0
 
         # Target Coordinates
         tx[b, best_n, gj, gi] = gx - gx.floor()
@@ -228,7 +233,7 @@ class RegionLayer(nn.Module):
         iou_scores[b, best_n, gj, gi] = bbox_iou(pred_boxes[b, best_n, gj, gi], target_boxes, x1y1x2y2=False)
 
         if self.rescore:
-            tconf = obj_mask.float() * iou_scores # rescore
+            tconf = obj_mask.float() * iou_scores  # rescore
         else:
             tconf = obj_mask.float()
 

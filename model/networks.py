@@ -2,7 +2,7 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
-from model.modules import ReorgLayer, RegionLayer
+from model.modules import ReorgLayer, RegionLayer, MaxPoolStride1
 
 
 class YOLOv2Network(nn.Module):
@@ -145,8 +145,10 @@ class YOLOv2Network(nn.Module):
                 stride = int(layer_def['stride'])
                 if stride > 1:
                     layer = nn.MaxPool2d(pool_size, stride)
+                elif stride == 1:
+                    layer = MaxPoolStride1(pool_size)
                 else:
-                    assert False, 'what is MaxPoolStride1'
+                    raise NotImplementedError
             elif layer_def["type"] == "route":
                 layer_idx = [int(x) for x in layer_def["layers"].split(",")]
                 filters = sum([filter_num_list[1:][i] for i in layer_idx])
