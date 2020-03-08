@@ -126,16 +126,16 @@ class RegionLayer(nn.Module):
                 use_cuda=use_cuda
             )
 
-            loss_x = nn.MSELoss(reduction='sum')(x * coord_mask_scale ** 0.5, tx * coord_mask_scale ** 0.5)
-            loss_y = nn.MSELoss(reduction='sum')(y * coord_mask_scale ** 0.5, ty * coord_mask_scale ** 0.5)
-            loss_w = nn.MSELoss(reduction='sum')(w * coord_mask_scale ** 0.5, tw * coord_mask_scale ** 0.5)
-            loss_h = nn.MSELoss(reduction='sum')(h * coord_mask_scale ** 0.5, th * coord_mask_scale ** 0.5)
+            loss_x = nn.MSELoss()(x * coord_mask_scale ** 0.5, tx * coord_mask_scale ** 0.5)
+            loss_y = nn.MSELoss()(y * coord_mask_scale ** 0.5, ty * coord_mask_scale ** 0.5)
+            loss_w = nn.MSELoss()(w * coord_mask_scale ** 0.5, tw * coord_mask_scale ** 0.5)
+            loss_h = nn.MSELoss()(h * coord_mask_scale ** 0.5, th * coord_mask_scale ** 0.5)
             loss_coord = loss_x + loss_y + loss_w + loss_h
             self.object_scale = noobj_mask.sum() / obj_mask.sum()
-            loss_conf_obj = self.object_scale * nn.MSELoss(reduction='sum')(pred_conf[obj_mask], tconf[obj_mask])
-            loss_conf_noobj = self.noobject_scale * nn.MSELoss(reduction='sum')(pred_conf[noobj_mask],
+            loss_conf_obj = self.object_scale * nn.MSELoss()(pred_conf[obj_mask], tconf[obj_mask])
+            loss_conf_noobj = self.noobject_scale * nn.MSELoss()(pred_conf[noobj_mask],
                                                                                 tconf[noobj_mask])
-            loss_cls = self.class_scale * nn.BCELoss(reduction='sum')(pred_cls[obj_mask], tcls[obj_mask])
+            loss_cls = self.class_scale * nn.BCELoss()(pred_cls[obj_mask], tcls[obj_mask])
             total_loss = loss_coord + loss_conf_obj + loss_conf_noobj + loss_cls
 
             # Metrics

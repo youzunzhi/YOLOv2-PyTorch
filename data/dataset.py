@@ -49,7 +49,6 @@ class YOLOv2Dataset(Dataset):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
         label_path = self.label_files[index % len(self.img_files)].rstrip()
         img = Image.open(img_path).convert('RGB')
-        boxes = None
         if os.path.exists(label_path):
             boxes = torch.from_numpy(np.loadtxt(label_path).reshape(-1, 5))
             img, boxes = pad_img_to_square_and_adjust_boxes(img, boxes)
