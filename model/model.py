@@ -69,7 +69,7 @@ class YOLOv2Model(object):
             for batch_i, (imgs, targets, img_path) in enumerate(train_dataloader):
                 if self.use_cuda:
                     imgs = imgs.cuda()
-                    targets = targets.cuda()
+                    targets = targets.cuda().detach()
 
                 loss = self.network(imgs, targets)
                 self.optimizer.zero_grad()
