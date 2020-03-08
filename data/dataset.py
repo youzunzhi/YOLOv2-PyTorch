@@ -58,8 +58,8 @@ class YOLOv2Dataset(Dataset):
         else:
             # print(label_path, 'not exists')
             targets = torch.zeros((0, 6))
-        if self.training:
-            img, boxes = data_augmentation(img, boxes, self.jitter, self.hue, self.saturation, self.exposure)
+        # if self.training:
+        #     img, boxes = data_augmentation(img, boxes, self.jitter, self.hue, self.saturation, self.exposure)
         img = transforms.ToTensor()(img)
 
         return img, targets, img_path
