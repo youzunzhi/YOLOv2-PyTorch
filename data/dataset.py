@@ -238,12 +238,12 @@ def pad_img_to_square_and_adjust_boxes(img, boxes, pad_value=0):
 
 
 def pad_img_to_square(img, pad_value=0):
-    c, h, w = img.shape
-    dim_diff = np.abs(h - w)
+    img_h, img_w = img.height, img.width
+    dim_diff = np.abs(img_h - img_w)
     # (upper / left) padding and (lower / right) padding
     pad1, pad2 = dim_diff // 2, dim_diff - dim_diff // 2
     # Determine padding (in ImageOps: the order is left-top-right-bottom)
-    border = (0, pad1, 0, pad2) if h <= w else (pad1, 0, pad2, 0)
+    border = (0, pad1, 0, pad2) if img_h <= img_w else (pad1, 0, pad2, 0)
     # Add padding
     img = ImageOps.expand(img, border=border, fill=pad_value)
 
