@@ -229,7 +229,7 @@ def pad_img_to_square_and_adjust_boxes(img, boxes, pad_value=0):
     x2 += border[2]
     y2 += border[3]
     # Returns normalized (x, y, w, h)
-    _, padded_h, padded_w = img.shape
+    padded_h, padded_w = img.height, img.width
     boxes[:, 1] = ((x1 + x2) / 2) / padded_w
     boxes[:, 2] = ((y1 + y2) / 2) / padded_h
     boxes[:, 3] *= img_w / padded_w
