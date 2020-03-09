@@ -19,7 +19,7 @@ class YOLOv2Model(object):
             self.save_weights_fname_prefix = os.path.join(self.cfg.OUTPUT_DIR,
                                                           cfg.MODEL_CFG_FNAME.split('/')[-1].split('.')[0])
             self.seen = 0
-            self.learning_rate = 0.001
+            self.learning_rate = cfg.TRAIN.LEARNING_RATE
             self.optimizer = optim.SGD(self.network.parameters(),
                                        lr=self.learning_rate,
                                        momentum=0.9,

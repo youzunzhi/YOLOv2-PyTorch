@@ -1,5 +1,6 @@
 from yacs.config import CfgNode as CN
 import torch
+
 _C = CN()
 _C.OUTPUT_DIR = 'runs/'
 _C.EXPERIMENT_NAME = 'default'
@@ -32,3 +33,4 @@ _C.DATA.N_CPU = 0
 
 _C.TRAIN = CN()
 _C.TRAIN.TOTAL_EPOCHS = 400
+_C.TRAIN.LEARNING_RATE = 0.0001
