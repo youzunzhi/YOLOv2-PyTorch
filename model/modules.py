@@ -160,11 +160,11 @@ class RegionLayer(nn.Module):
             target_coords_grid_size_i_for_iou = target_coords_grid_size_i.repeat(num_samples, self.num_anchors, grid_size, grid_size, 1)
             pred_coords_ious = bbox_iou(pred_coords_grid_size, target_coords_grid_size_i_for_iou, x1y1x2y2=False)
             noobject_mask[pred_coords_ious > self.thresh] = 0
-        loss_noobject = nn.MSELoss()(pred_conf[noobject_mask], torch.zeros(pred_conf[noobject_mask].shape)) * self.noobject_scale
+        loss_noobject = nn.MSELoss()(pred_conf[noobject_mask], torch_byte_tensor(pred_conf[noobject_mask].shape)) * self.noobject_scale
 
         # ---- prior loss ---- #
         if seen < 12800:
-            prior_coords_for_loss = torch.zeros((num_samples, self.num_anchors, grid_size, grid_size, 4))
+            prior_coords_for_loss = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size, 4).fill_(0)
             prior_coords_for_loss[..., 0] = 0.5
             prior_coords_for_loss[..., 1] = 0.5
             # prior_coords_for_loss[..., 2] == prior_coords_for_loss[..., 3] == 0
