@@ -3,16 +3,16 @@ import torch
 
 _C = CN()
 _C.OUTPUT_DIR = 'runs/'
-_C.EXPERIMENT_NAME = 'default'
+_C.EXPERIMENT_NAME = 'tiny_voc_trained'
 _C.CUDA_ID = '0'
-train_on = 'coco'
+train_on = 'voc'
 if train_on == 'coco':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2.cfg"
 elif train_on == 'voc':
-    _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-voc.cfg"
-    # _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-tiny-voc.cfg"
-_C.WEIGHTS_FNAME = "weights/darknet19_448.conv.23"
-# _C.WEIGHTS_FNAME = "weights/yolov2-tiny-voc.weights"
+    # _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-voc.cfg"
+    _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-tiny-voc.cfg"
+# _C.WEIGHTS_FNAME = "weights/darknet19_448.conv.23"
+_C.WEIGHTS_FNAME = "weights/yolov2-tiny-voc.weights"
 # _C.WEIGHTS_FNAME = "weights/yolov2.weights"
 _C.CONF_THRESH = 0.005
 _C.NMS_THRESH = 0.45
