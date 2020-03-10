@@ -21,7 +21,7 @@ class YOLOv2Network(nn.Module):
             elif layer_def['type'] == 'route':
                 x = torch.cat([layer_outputs[int(layer_i)] for layer_i in layer_def["layers"].split(",")], 1)
             elif layer_def['type'] == 'region':
-                output = layer(x, targets, seen=self.seen, use_cuda=self.use_cuda)
+                output = layer(x, targets, seen=self.seen)
                 self.seen += x.shape[0]
             layer_outputs.append(x)
         return output
@@ -37,6 +37,7 @@ class YOLOv2Network(nn.Module):
         # Establish cutoff for loading backbone weights
         cutoff = None
         if "darknet19_448.conv.23" in weights_fname:
+            self.seen = 0
             cutoff = 23
 
         ptr = 0
@@ -158,7 +159,7 @@ class YOLOv2Network(nn.Module):
                 filters = stride * stride * filter_num_list[-1]
                 layer = ReorgLayer(stride)
             elif layer_def["type"] == "region":
-                layer = RegionLayer(layer_def)
+                layer = RegionLayer(layer_def, use_cuda=self.use_cuda)
             else:
                 assert False, 'unknown type %s' % (layer_def['type'])
             if self.use_cuda and layer is not None:
