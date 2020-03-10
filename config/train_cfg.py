@@ -28,7 +28,7 @@ if train_on == 'coco':
 elif train_on == 'voc':
     _C.DATA.DATA_CFG_FNAME = "pjreddie_files/voc.data"
 _C.DATA.IMG_SIZE = 416
-_C.DATA.BATCH_SIZE = 2
+_C.DATA.BATCH_SIZE = 64
 _C.DATA.MULTISCALE = False
 _C.DATA.N_CPU = 0
 

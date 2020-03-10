@@ -143,13 +143,13 @@ class RegionLayer(nn.Module):
         target_coords_for_loss[sample_index, anchor_index, grid_index_y, grid_index_x, 2] = torch.log(target_coords_grid_size[:, 2] / self.anchors[anchor_index, 0])
         target_coords_for_loss[sample_index, anchor_index, grid_index_y, grid_index_x, 3] = torch.log(target_coords_grid_size[:, 3] / self.anchors[anchor_index, 1])
 
-        pred_coords_for_loss = torch.zeros((num_samples, self.num_anchors, grid_size, grid_size, 4))
+        pred_coords_for_loss = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size, 4)
         pred_coords_for_loss[..., 0] = torch.sigmoid(pred_tx)
         pred_coords_for_loss[..., 1] = torch.sigmoid(pred_ty)
         pred_coords_for_loss[..., 2] = pred_tw
         pred_coords_for_loss[..., 3] = pred_th
         # the loss of coordinates is scaled upon the corresponded target_box's w and h.
-        loss_coords_wh_scale = torch.zeros((num_samples, self.num_anchors, grid_size, grid_size))
+        loss_coords_wh_scale = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size)
         loss_coords_wh_scale[sample_index, anchor_index, grid_index_y, grid_index_x] = 2 - target_coords_grid_size[:, 2] * target_coords_grid_size[:, 3] / (grid_size**2)
         loss_coords = nn.MSELoss()(pred_coords_for_loss[target_mask] * loss_coords_wh_scale[target_mask].unsqueeze(-1) ** 0.5, target_coords_for_loss[target_mask] * loss_coords_wh_scale[target_mask].unsqueeze(-1) ** 0.5) * self.coord_scale # 1/n*s*(a-b)^2 == 1/n*(a*s^(0.5)-b*s^(0.5))^2
 
