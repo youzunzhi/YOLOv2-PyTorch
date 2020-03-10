@@ -170,7 +170,7 @@ class RegionLayer(nn.Module):
             # prior_coords_for_loss[..., 2] == prior_coords_for_loss[..., 3] == 0
             loss_prior = nn.MSELoss()(pred_coords_for_loss[~target_mask], prior_coords_for_loss[~target_mask]) * 0.01
         else:
-            loss_prior = 0
+            loss_prior = 0.
 
         total_loss = loss_cls + loss_obj_conf + loss_coords + loss_noobject + loss_prior
         # Metrics
