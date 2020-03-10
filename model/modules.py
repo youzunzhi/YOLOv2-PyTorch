@@ -111,10 +111,11 @@ class RegionLayer(nn.Module):
         # make a (B, A, H, W, 4) shaped tensor to contain 4 coords of the pred_box (related to grid size, as target_coords_grid_size do)
         pred_coords_grid_size = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size, 4)
         pred_coords_grid_size[..., 0] = torch.sigmoid(pred_tx) + torch.arange(grid_size).repeat(grid_size, 1).view(
-            [1, 1, grid_size, grid_size]).float()
-        pred_coords_grid_size[..., 1] = torch.sigmoid(pred_ty) + torch.arange(grid_size).repeat(grid_size,
-                                                                                                1).t().view(
-            [1, 1, grid_size, grid_size]).float()
+            [1, 1, grid_size, grid_size]).float() if self.use_cuda else torch.sigmoid(pred_tx) + torch.arange(grid_size).repeat(grid_size, 1).view(
+            [1, 1, grid_size, grid_size]).float().cuda()
+        pred_coords_grid_size[..., 1] = torch.sigmoid(pred_ty) + torch.arange(grid_size).repeat(grid_size, 1).t().view(
+            [1, 1, grid_size, grid_size]).float() if self.use_cuda else torch.sigmoid(pred_ty) + torch.arange(grid_size).repeat(grid_size, 1).t().view(
+            [1, 1, grid_size, grid_size]).float().cuda()
         pred_coords_grid_size[..., 2] = torch.exp(pred_tw) * self.anchors[:, 0].view(1, self.num_anchors, 1, 1)
         pred_coords_grid_size[..., 3] = torch.exp(pred_th) * self.anchors[:, 1].view(1, self.num_anchors, 1, 1)
         # compute the IoU between each target_box and its corresponding pred_box
