@@ -142,7 +142,7 @@ class RegionLayer(nn.Module):
         pred_coords_grid_size[..., 3] = torch.exp(pred_th) * self.anchors[:, 1].view(1, self.num_anchors, 1, 1)
         # compute the IoU between each target_box and its corresponding pred_box
         iou_target_pred = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0)
-        iou_target_pred[target_mask] = bbox_iou(pred_coords_grid_size[sample_index, anchor_index, grid_index_y, grid_index_x], target_coords_grid_size, x1y1x2y2=False)
+        iou_target_pred[sample_index, anchor_index, grid_index_y, grid_index_x] = bbox_iou(pred_coords_grid_size[sample_index, anchor_index, grid_index_y, grid_index_x], target_coords_grid_size, x1y1x2y2=False)
 
         # ---- classification loss ---- #
         target_cls = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size, self.num_classes).fill_(0)
