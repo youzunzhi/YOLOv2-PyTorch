@@ -89,6 +89,9 @@ class RegionLayer(nn.Module):
 
         # -------------- training -------------- #
         # ---- preparation ---- #
+        torch_byte_tensor = torch.cuda.ByteTensor if self.use_cuda else torch.ByteTensor
+        torch_float_tensor = torch.cuda.FloatTensor if self.use_cuda else torch.FloatTensor
+
         # the first 4 float of the last dimension of x_permute are `tx, ty, tw, th`
         pred_tx, pred_ty, pred_tw, pred_th = x_permute[..., 0], x_permute[..., 1], x_permute[..., 2], x_permute[..., 3]
         # the 5th float of the last dimension of x_permute are confidence of having object in this pred_box
@@ -102,11 +105,11 @@ class RegionLayer(nn.Module):
         grid_index_x, grid_index_y = target_coords_grid_size[:, 0].long(), target_coords_grid_size[:, 1].long()
         sample_index = targets[:, 0].long()
         # make a mask of all target-corresponded pred_box. Note that x[target_mask] is not x[sample_index, anchor_index, grid_index_y, grid_index_x] (the order is different and maybe the number as well)
-        target_mask = torch.zeros((num_samples, self.num_anchors, grid_size, grid_size)).bool()
+        target_mask = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0).bool()
         target_mask[sample_index, anchor_index, grid_index_y, grid_index_x] = True
         assert target_mask.sum() == len(target_coords_grid_size)    # There's a chance that multiple target_boxes corresponds to the same anchor box. I don't know how to deal with that yet.
         # make a (B, A, H, W, 4) shaped tensor to contain 4 coords of the pred_box (related to grid size, as target_coords_grid_size do)
-        pred_coords_grid_size = torch.zeros((num_samples, self.num_anchors, grid_size, grid_size, 4))
+        pred_coords_grid_size = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size, 4)
         pred_coords_grid_size[..., 0] = torch.sigmoid(pred_tx) + torch.arange(grid_size).repeat(grid_size, 1).view(
             [1, 1, grid_size, grid_size]).float()
         pred_coords_grid_size[..., 1] = torch.sigmoid(pred_ty) + torch.arange(grid_size).repeat(grid_size,
@@ -115,25 +118,25 @@ class RegionLayer(nn.Module):
         pred_coords_grid_size[..., 2] = torch.exp(pred_tw) * self.anchors[:, 0].view(1, self.num_anchors, 1, 1)
         pred_coords_grid_size[..., 3] = torch.exp(pred_th) * self.anchors[:, 1].view(1, self.num_anchors, 1, 1)
         # compute the IoU between each target_box and its corresponding pred_box
-        iou_target_pred = torch.zeros((num_samples, self.num_anchors, grid_size, grid_size))
+        iou_target_pred = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0)
         iou_target_pred[target_mask] = bbox_iou(pred_coords_grid_size[target_mask], target_coords_grid_size,
                                                 x1y1x2y2=False)
 
         # ---- classification loss ---- #
-        target_cls = torch.zeros((num_samples, self.num_anchors, grid_size, grid_size, self.num_classes))
+        target_cls = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size, self.num_classes).fill_(0)
         target_cls_index = targets[:, 1].long()
         target_cls[sample_index, anchor_index, grid_index_y, grid_index_x, target_cls_index] = 1.
         loss_cls = nn.MSELoss()(pred_cls[target_mask], target_cls[target_mask]) * self.class_scale
 
         # ---- confidence loss ---- #
-        target_conf = torch.zeros((num_samples, self.num_anchors, grid_size, grid_size))
+        target_conf = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0)
         target_conf[target_mask] = 1.
         if self.rescore:
             target_conf *= iou_target_pred
         loss_obj_conf = nn.MSELoss()(pred_conf[target_mask], target_conf[target_mask]) * self.object_scale
 
         # ---- coordinates loss ---- #
-        target_coords_for_loss = torch.zeros((num_samples, self.num_anchors, grid_size, grid_size, 4))
+        target_coords_for_loss = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size, 4).fill_(0)
         target_coords_for_loss[sample_index, anchor_index, grid_index_y, grid_index_x, 0] = target_coords_grid_size[:, 0] - grid_index_x
         target_coords_for_loss[sample_index, anchor_index, grid_index_y, grid_index_x, 1] = target_coords_grid_size[:, 1] - grid_index_y
         target_coords_for_loss[sample_index, anchor_index, grid_index_y, grid_index_x, 2] = torch.log(target_coords_grid_size[:, 2] / self.anchors[anchor_index, 0])
