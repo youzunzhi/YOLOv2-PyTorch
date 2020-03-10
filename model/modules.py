@@ -111,7 +111,7 @@ class RegionLayer(nn.Module):
         target_mask = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0).bool()
         target_mask[sample_index, anchor_index, grid_index_y, grid_index_x] = True
 
-        # 这个情况太难了，先算了
+        # 这个情况太难了，先算了，但是绝对应该要解决。
         # assert target_mask.sum() == len(target_coords_grid_size), img_paths    # There's a chance that multiple target_boxes corresponds to the same anchor box. I don't know how to deal with that yet.
         # while target_mask.sum() != len(target_coords_grid_size):   # There's a chance that multiple target_boxes corresponds to the same anchor box. I don't know how to deal with that yet.
         #     conflicted_index_list = []
@@ -142,8 +142,7 @@ class RegionLayer(nn.Module):
         pred_coords_grid_size[..., 3] = torch.exp(pred_th) * self.anchors[:, 1].view(1, self.num_anchors, 1, 1)
         # compute the IoU between each target_box and its corresponding pred_box
         iou_target_pred = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0)
-        iou_target_pred[target_mask] = bbox_iou(pred_coords_grid_size[target_mask], target_coords_grid_size,
-                                                x1y1x2y2=False)
+        iou_target_pred[target_mask] = bbox_iou(pred_coords_grid_size[sample_index, anchor_index, grid_index_y, grid_index_x], target_coords_grid_size, x1y1x2y2=False)
 
         # ---- classification loss ---- #
         target_cls = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size, self.num_classes).fill_(0)
