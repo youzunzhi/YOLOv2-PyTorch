@@ -171,8 +171,8 @@ class RegionLayer(nn.Module):
             loss_prior = nn.MSELoss()(pred_coords_for_loss[~target_mask], prior_coords_for_loss[~target_mask]) * 0.01
         else:
             loss_prior = 0
-        total_loss = loss_cls + loss_obj_conf + loss_coords + loss_noobject + loss_prior
 
+        total_loss = loss_cls + loss_obj_conf + loss_coords + loss_noobject + loss_prior
         # Metrics
         correct_cls = pred_cls[sample_index, anchor_index, grid_index_y, grid_index_x].argmax(1) == target_cls_index
         cls_acc = 100 * correct_cls.float().mean()
@@ -191,7 +191,6 @@ class RegionLayer(nn.Module):
             "loss_obj_conf": loss_obj_conf.item(),
             "loss_coords": loss_coords.item(),
             "loss_noobject": loss_noobject.item(),
-            "loss_prior": loss_prior.item(),
             "cls_acc": cls_acc.item(),
             "obj_conf": obj_conf.item(),
             "obj_iou": iou_target_pred[target_mask].mean(),
@@ -201,6 +200,8 @@ class RegionLayer(nn.Module):
             "precision": precision.item(),
             "grid_size": grid_size,
         }
+        if seen < 12800:
+            self.metrics['loss_prior'] = loss_prior.item()
         return total_loss
 
 class RegionLayer_deprecated(nn.Module):
