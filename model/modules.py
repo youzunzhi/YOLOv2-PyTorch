@@ -66,7 +66,7 @@ class RegionLayer(nn.Module):
         self.thresh = float(module_def['thresh'])
         self.rescore = int(module_def['rescore'])
 
-    def forward(self, x, targets, seen=0):
+    def forward(self, x, targets, seen=0, img_paths=''):
         """
         :param x: the output of last layer. Shape: (B, A*(C+5), H, W).
         :param targets: the target bboxes. Each row has 6 num: sample_index, cls, x, y, w, h (0~1). shape: (num_target_box, 6)
@@ -107,7 +107,7 @@ class RegionLayer(nn.Module):
         # make a mask of all target-corresponded pred_box. Note that x[target_mask] is not x[sample_index, anchor_index, grid_index_y, grid_index_x] (the order is different and maybe the number as well)
         target_mask = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0).bool()
         target_mask[sample_index, anchor_index, grid_index_y, grid_index_x] = True
-        assert target_mask.sum() == len(target_coords_grid_size)    # There's a chance that multiple target_boxes corresponds to the same anchor box. I don't know how to deal with that yet.
+        assert target_mask.sum() == len(target_coords_grid_size), img_paths    # There's a chance that multiple target_boxes corresponds to the same anchor box. I don't know how to deal with that yet.
         # make a (B, A, H, W, 4) shaped tensor to contain 4 coords of the pred_box (related to grid size, as target_coords_grid_size do)
         pred_coords_grid_size = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size, 4)
         pred_coords_grid_size[..., 0] = torch.sigmoid(pred_tx) + torch.arange(grid_size).repeat(grid_size, 1).view(

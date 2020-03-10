@@ -12,7 +12,7 @@ class YOLOv2Network(nn.Module):
         self.hyper_parameters, self.module_list = self.get_module_list(model_cfg_fname)
         self.load_weights(weights_fname)
 
-    def forward(self, x, targets=None):
+    def forward(self, x, targets=None, img_paths=''):
         layer_outputs = []
         output = None
         for i, (layer_def, layer) in enumerate(zip(self.layer_defs, self.module_list)):
@@ -21,7 +21,7 @@ class YOLOv2Network(nn.Module):
             elif layer_def['type'] == 'route':
                 x = torch.cat([layer_outputs[int(layer_i)] for layer_i in layer_def["layers"].split(",")], 1)
             elif layer_def['type'] == 'region':
-                output = layer(x, targets, seen=self.seen)
+                output = layer(x, targets, seen=self.seen, img_paths=img_paths)
                 self.seen += x.shape[0]
             layer_outputs.append(x)
         return output

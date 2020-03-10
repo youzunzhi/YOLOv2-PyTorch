@@ -67,12 +67,13 @@ class YOLOv2Model(object):
         self.network.train()
         for epoch in range(1, total_epochs+1):
             start_time = time.time()
-            for batch_i, (imgs, targets, img_path) in enumerate(train_dataloader):
+            for batch_i, (imgs, targets, img_paths) in enumerate(train_dataloader):
                 if self.use_cuda:
                     imgs = imgs.cuda()
                     targets = targets.cuda().detach()
 
-                loss = self.network(imgs, targets)
+                loss = self.network(imgs, targets, img_paths)
+
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
