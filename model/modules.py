@@ -104,10 +104,32 @@ class RegionLayer(nn.Module):
         _, anchor_index = torch.stack([bbox_wh_iou(anchor, target_coords_grid_size[:, 2:]) for anchor in self.anchors]).max(0)
         grid_index_x, grid_index_y = target_coords_grid_size[:, 0].long(), target_coords_grid_size[:, 1].long()
         sample_index = targets[:, 0].long()
+        # while multi_target_to_one_anchor:
+        #     change the second correct pred_box to the second similar anchor
+
         # make a mask of all target-corresponded pred_box. Note that x[target_mask] is not x[sample_index, anchor_index, grid_index_y, grid_index_x] (the order is different and maybe the number as well)
         target_mask = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0).bool()
         target_mask[sample_index, anchor_index, grid_index_y, grid_index_x] = True
-        assert target_mask.sum() == len(target_coords_grid_size), img_paths    # There's a chance that multiple target_boxes corresponds to the same anchor box. I don't know how to deal with that yet.
+
+        # 这个情况太难了，先算了
+        # assert target_mask.sum() == len(target_coords_grid_size), img_paths    # There's a chance that multiple target_boxes corresponds to the same anchor box. I don't know how to deal with that yet.
+        # while target_mask.sum() != len(target_coords_grid_size):   # There's a chance that multiple target_boxes corresponds to the same anchor box. I don't know how to deal with that yet.
+        #     conflicted_index_list = []
+        #     index_combination = torch.stack([sample_index, anchor_index, grid_index_y, grid_index_x]).t()
+        #
+        #     for i in range(index_combination.shape[0]-1):
+        #         for j in range(i+1, index_combination.shape[0]):
+        #             if (index_combination[i] == index_combination[j]).sum() == 4:
+        #                 appended_flag = False
+        #                 for k in range(len(conflicted_index_list)):
+        #                     if (index_combination[j] == index_combination[conflicted_index_list[k][0]]).sum() == 4:
+        #                         conflicted_index_list[k].append(j)
+        #                         assert len(conflicted_index_list[k]) <= self.num_anchors,
+        #                         appended_flag = True
+        #                 if not appended_flag:
+        #                     conflicted_index_list.append([i, j])
+        #                 # anchor_index[i] = torch.stack([bbox_wh_iou(anchor, target_coords_grid_size[:, 2:]) for anchor in self.anchors]).argsort(0)[-2][i]
+
         # make a (B, A, H, W, 4) shaped tensor to contain 4 coords of the pred_box (related to grid size, as target_coords_grid_size do)
         pred_coords_grid_size = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size, 4)
         pred_coords_grid_size[..., 0] = torch.sigmoid(pred_tx) + torch.arange(grid_size).repeat(grid_size, 1).view(
@@ -159,8 +181,8 @@ class RegionLayer(nn.Module):
         for target_coords_grid_size_i in target_coords_grid_size:
             target_coords_grid_size_i_for_iou = target_coords_grid_size_i.repeat(num_samples, self.num_anchors, grid_size, grid_size, 1)
             pred_coords_ious = bbox_iou(pred_coords_grid_size, target_coords_grid_size_i_for_iou, x1y1x2y2=False)
-            noobject_mask[pred_coords_ious > self.thresh] = 0
-        loss_noobject = nn.MSELoss()(pred_conf[noobject_mask], torch_float_tensor(pred_conf[noobject_mask].shape)) * self.noobject_scale
+            noobject_mask[pred_coords_ious > self.thresh] = False
+        loss_noobject = nn.MSELoss()(pred_conf[noobject_mask], torch_float_tensor(pred_conf[noobject_mask].shape).fill_(0)) * self.noobject_scale
 
         # ---- prior loss ---- #
         if seen < 12800:
