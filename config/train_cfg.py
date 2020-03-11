@@ -3,12 +3,12 @@ import torch
 
 _C = CN()
 _C.OUTPUT_DIR = 'runs/'
-_C.EXPERIMENT_NAME = 'tiny_voc_init'
+_C.EXPERIMENT_NAME = 'coco_scratch'
 _C.CUDA_ID = '0'
 _C.EVAL_INTERVAL = 10
 _C.SAVE_INTERVAL = 10
 
-train_on = 'voc'
+train_on = 'coco'
 if train_on == 'coco':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2.cfg"
 elif train_on == 'voc':
