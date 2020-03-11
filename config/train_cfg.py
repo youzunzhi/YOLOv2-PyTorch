@@ -5,6 +5,9 @@ _C = CN()
 _C.OUTPUT_DIR = 'runs/'
 _C.EXPERIMENT_NAME = 'tiny_voc_trained'
 _C.CUDA_ID = '0'
+_C.EVAL_INTERVAL = 10
+_C.SAVE_INTERNAL = 10
+
 train_on = 'voc'
 if train_on == 'coco':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2.cfg"
