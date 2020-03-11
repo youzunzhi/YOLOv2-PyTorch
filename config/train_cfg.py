@@ -5,7 +5,7 @@ _C = CN()
 _C.OUTPUT_DIR = 'runs/'
 _C.EXPERIMENT_NAME = 'tiny_voc_scratch'
 _C.CUDA_ID = '0'
-_C.EVAL_INTERVAL = 10
+_C.EVAL_INTERVAL = 500
 _C.SAVE_INTERVAL = 10
 
 train_on = 'voc'
