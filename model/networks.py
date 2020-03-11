@@ -10,7 +10,10 @@ class YOLOv2Network(nn.Module):
         super(YOLOv2Network, self).__init__()
         self.use_cuda = use_cuda
         self.hyper_parameters, self.module_list = self.get_module_list(model_cfg_fname)
-        self.load_weights(weights_fname)
+        if not os.path.exists(weights_fname):
+            print(f"{weights_fname} not exists")
+        else:
+            self.load_weights(weights_fname)
 
     def forward(self, x, targets=None, img_paths=''):
         layer_outputs = []
@@ -27,7 +30,6 @@ class YOLOv2Network(nn.Module):
         return output
 
     def load_weights(self, weights_fname):
-        assert os.path.exists(weights_fname), f"{weights_fname} not exists"
         with open(weights_fname, "rb") as f:
             header = np.fromfile(f, dtype=np.int32, count=4)  # First four are header values
             self.header_info = header  # Needed to write header when saving weights
