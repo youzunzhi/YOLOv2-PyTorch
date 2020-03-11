@@ -81,17 +81,17 @@ class YOLOv2Model(object):
                                    self.network.module_list[-1].metrics)
 
             self.scheduler.step()
-            if epoch % self.cfg.EVAL_INTERVAL == self.cfg.EVAL_INTERVAL - 1:
-                self.eval(eval_dataloader)
             if epoch % self.cfg.SAVE_INTERVAL == self.cfg.SAVE_INTERVAL - 1:
                 epoch_save_weights_fname = f'{self.save_weights_fname_prefix}-{epoch}.weights'
                 self.network.save_weights(epoch_save_weights_fname)
+            if epoch % self.cfg.EVAL_INTERVAL == self.cfg.EVAL_INTERVAL - 1:
+                self.eval(eval_dataloader)
 
-        if total_epochs % self.cfg.EVAL_INTERVAL == self.cfg.EVAL_INTERVAL - 1:
-            self.eval(eval_dataloader)
         if total_epochs % self.cfg.SAVE_INTERVAL == self.cfg.SAVE_INTERVAL - 1:
             epoch_save_weights_fname = self.save_weights_fname_prefix + str(total_epochs) + '.weights'
             self.network.save_weights(epoch_save_weights_fname)
+        if total_epochs % self.cfg.EVAL_INTERVAL == self.cfg.EVAL_INTERVAL - 1:
+            self.eval(eval_dataloader)
 
 # class YOLOv2Model_deprecate(object):
 #     def __init__(self, cfg, training=False):
