@@ -12,6 +12,7 @@ class YOLOv2Network(nn.Module):
         self.hyper_parameters, self.module_list = self.get_module_list(model_cfg_fname)
         if not os.path.exists(weights_fname):
             print(f"{weights_fname} not exists")
+            self.seen = 0
         else:
             self.load_weights(weights_fname)
 
