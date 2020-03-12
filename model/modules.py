@@ -236,16 +236,6 @@ class RegionLayer(nn.Module):
             self.metrics['loss_prior'] = loss_prior.item()
         return total_loss
 
-    def get_predictions(self, x_permute):
-
-        output = torch.cat(
-            (
-                pred_boxes.view(num_samples, -1, 4) / grid_size,
-                pred_conf.view(num_samples, -1, 1),
-                pred_cls.view(num_samples, -1, self.num_classes),
-            ),
-            -1,
-        )  # B,(H*W*A),25
 
 class RegionLayer_deprecated(nn.Module):
     def __init__(self, module_def):

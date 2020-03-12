@@ -116,23 +116,30 @@ def get_batch_metrics(predictions, batch_targets):
         targets = batch_targets[batch_targets[:, 0] == i][:, 1:]
         targets_labels = targets[:, 0] if len(targets) else []
         if len(targets):
-            detected_boxes = []
+            target_detected = []
             target_boxes = targets[:, 1:]
 
             for pred_i, (pred_box, pred_label) in enumerate(zip(pred_boxes, pred_labels)):
 
                 # If targets are all found then break
-                if len(detected_boxes) == len(targets):
+                if len(target_detected) == len(targets):
                     break
 
                 # Ignore if label is not one of the targets labels
                 if pred_label not in targets_labels:
                     continue
 
-                iou, box_index = bbox_iou(pred_box.unsqueeze(0), target_boxes, x1y1x2y2=False).max(0) # TODO: 如果和这个pred_box iou最大的那个target_box并不是正确的box（类别不对），但是还有一个跟pred_box 的iou满足要求的正确的box，那这个应不应该算成一个tp？
-                if iou >= iou_thresh and box_index not in detected_boxes and pred_label == targets_labels[box_index]:
-                    true_positives[pred_i] = 1
-                    detected_boxes += [box_index]
+                # iou, box_index = bbox_iou(pred_box.unsqueeze(0), target_boxes, x1y1x2y2=False).max(0) # TODO: 如果和这个pred_box iou最大的那个target_box并不是正确的box（类别不对），但是还有一个跟pred_box 的iou满足要求的正确的box，那这个应不应该算成一个tp？
+                # if iou >= iou_thresh and box_index not in target_detected and pred_label == targets_labels[box_index]:
+                #     true_positives[pred_i] = 1
+                #     target_detected += [box_index]
+
+                iou_targets_pred = bbox_iou(pred_box.unsqueeze(0), target_boxes, x1y1x2y2=False)
+                for target_i, target_box in enumerate(target_boxes):
+                    if target_i not in target_detected and iou_targets_pred[target_i] > iou_thresh and pred_label == targets_labels[target_i]:
+                        true_positives[pred_i] = 1
+                        target_detected.append(target_i)
+
         batch_metrics.append([true_positives, pred_conf, pred_labels])
 
     return batch_metrics
