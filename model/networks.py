@@ -88,7 +88,7 @@ class YOLOv2Network(nn.Module):
         self.header_info[3] = self.seen
         self.header_info.tofile(fp)
 
-        # Iterate through layers
+        # Iterate through layersK
         for i, module in enumerate(self.module_list):
             if isinstance(module, nn.Conv2d):
                 conv_layer = module

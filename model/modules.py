@@ -76,6 +76,9 @@ class RegionLayer(nn.Module):
         num_samples = x.size(0)     # B == num_sample
         grid_size = x.size(2)       # H == W == grid_size
 
+        torch_byte_tensor = torch.cuda.ByteTensor if self.use_cuda else torch.ByteTensor
+        torch_float_tensor = torch.cuda.FloatTensor if self.use_cuda else torch.FloatTensor
+
         # make x to a (B, A, H, W, (C+5)) shaped x_permute
         x_permute = (
             x.view(num_samples, self.num_anchors, self.num_classes + 5, grid_size, grid_size)
@@ -83,21 +86,38 @@ class RegionLayer(nn.Module):
                 .contiguous()
         )
 
-        # if it's testing, just return the prediction
-        if targets is None:
-            return self.get_predictions(x_permute)
-
-        # -------------- training -------------- #
-        # ---- preparation ---- #
-        torch_byte_tensor = torch.cuda.ByteTensor if self.use_cuda else torch.ByteTensor
-        torch_float_tensor = torch.cuda.FloatTensor if self.use_cuda else torch.FloatTensor
-
         # the first 4 float of the last dimension of x_permute are `tx, ty, tw, th`
         pred_tx, pred_ty, pred_tw, pred_th = x_permute[..., 0], x_permute[..., 1], x_permute[..., 2], x_permute[..., 3]
         # the 5th float of the last dimension of x_permute are confidence of having object in this pred_box
-        pred_conf = torch.sigmoid(x_permute[..., 4])        # use sigmoid to make it 0~1
+        pred_conf = torch.sigmoid(x_permute[..., 4])  # use sigmoid to make it 0~1
         # the rest of the last dimension of x_permute are P(cls|object)
-        pred_cls = torch.sigmoid(x_permute[..., 5:])        # use sigmoid to make it 0~1
+        pred_cls = torch.sigmoid(x_permute[..., 5:])  # use sigmoid to make it 0~1
+        # make a (B, A, H, W, 4) shaped tensor to contain 4 coords of the pred_box, related to grid size
+        pred_coords_grid_size = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size, 4)
+        pred_coords_grid_size[..., 0] = torch.sigmoid(pred_tx) + torch.arange(grid_size).repeat(grid_size, 1).view(
+            [1, 1, grid_size, grid_size]).float().cuda() if self.use_cuda else torch.sigmoid(pred_tx) + torch.arange(grid_size).repeat(grid_size, 1).view(
+            [1, 1, grid_size, grid_size]).float()
+        pred_coords_grid_size[..., 1] = torch.sigmoid(pred_ty) + torch.arange(grid_size).repeat(grid_size, 1).t().view(
+            [1, 1, grid_size, grid_size]).float().cuda() if self.use_cuda else torch.sigmoid(pred_ty) + torch.arange(grid_size).repeat(grid_size, 1).t().view(
+            [1, 1, grid_size, grid_size]).float()
+        pred_coords_grid_size[..., 2] = torch.exp(pred_tw) * self.anchors[:, 0].view(1, self.num_anchors, 1, 1)
+        pred_coords_grid_size[..., 3] = torch.exp(pred_th) * self.anchors[:, 1].view(1, self.num_anchors, 1, 1)
+
+        # if it's testing, just return the prediction
+        if targets is None:
+            predictions = torch.cat(
+                (
+                    pred_coords_grid_size.view(num_samples, -1, 4) / grid_size,
+                    pred_conf.view(num_samples, -1, 1),
+                    pred_cls.view(num_samples, -1, self.num_classes),
+                ),
+                -1,
+            )  # B, (H*W*A), (C+5)
+            return predictions
+
+        # -------------- training -------------- #
+        # ---- preparation ---- #
+
         # get 4 coords of target boxes, related to grid_size. Shape: (num_num_target_box, 4).
         target_coords_grid_size = targets[:, 2:6] * grid_size
         # get each target_box's corresponding anchor_index, sample_index, grid_index_x, grid_index_y. They are all (num_target_box,) shaped.
@@ -130,16 +150,7 @@ class RegionLayer(nn.Module):
         #                     conflicted_index_list.append([i, j])
         #                 # anchor_index[i] = torch.stack([bbox_wh_iou(anchor, target_coords_grid_size[:, 2:]) for anchor in self.anchors]).argsort(0)[-2][i]
 
-        # make a (B, A, H, W, 4) shaped tensor to contain 4 coords of the pred_box (related to grid size, as target_coords_grid_size do)
-        pred_coords_grid_size = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size, 4)
-        pred_coords_grid_size[..., 0] = torch.sigmoid(pred_tx) + torch.arange(grid_size).repeat(grid_size, 1).view(
-            [1, 1, grid_size, grid_size]).float().cuda() if self.use_cuda else torch.sigmoid(pred_tx) + torch.arange(grid_size).repeat(grid_size, 1).view(
-            [1, 1, grid_size, grid_size]).float()
-        pred_coords_grid_size[..., 1] = torch.sigmoid(pred_ty) + torch.arange(grid_size).repeat(grid_size, 1).t().view(
-            [1, 1, grid_size, grid_size]).float().cuda() if self.use_cuda else torch.sigmoid(pred_ty) + torch.arange(grid_size).repeat(grid_size, 1).t().view(
-            [1, 1, grid_size, grid_size]).float()
-        pred_coords_grid_size[..., 2] = torch.exp(pred_tw) * self.anchors[:, 0].view(1, self.num_anchors, 1, 1)
-        pred_coords_grid_size[..., 3] = torch.exp(pred_th) * self.anchors[:, 1].view(1, self.num_anchors, 1, 1)
+
         # compute the IoU between each target_box and its corresponding pred_box
         iou_target_pred = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0)
         iou_target_pred[sample_index, anchor_index, grid_index_y, grid_index_x] = bbox_iou(pred_coords_grid_size[sample_index, anchor_index, grid_index_y, grid_index_x], target_coords_grid_size, x1y1x2y2=False)
@@ -224,6 +235,17 @@ class RegionLayer(nn.Module):
         if seen < 12800:
             self.metrics['loss_prior'] = loss_prior.item()
         return total_loss
+
+    def get_predictions(self, x_permute):
+
+        output = torch.cat(
+            (
+                pred_boxes.view(num_samples, -1, 4) / grid_size,
+                pred_conf.view(num_samples, -1, 1),
+                pred_cls.view(num_samples, -1, self.num_classes),
+            ),
+            -1,
+        )  # B,(H*W*A),25
 
 class RegionLayer_deprecated(nn.Module):
     def __init__(self, module_def):
