@@ -13,6 +13,7 @@ class YOLOv2Network(nn.Module):
         if not os.path.exists(weights_fname):
             print(f"{weights_fname} not exists")
             self.seen = 0
+            self.header_info = np.array([0, 0, 0, self.seen, 0], dtype=np.int32)
         else:
             self.load_weights(weights_fname)
 
