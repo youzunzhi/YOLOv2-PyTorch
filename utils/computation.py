@@ -136,7 +136,7 @@ def get_batch_metrics(predictions, batch_targets):
 
                 iou_targets_pred = bbox_iou(pred_box.unsqueeze(0), target_boxes, x1y1x2y2=False)
                 for target_i, target_box in enumerate(target_boxes):
-                    if target_i not in target_detected and iou_targets_pred[target_i] > iou_thresh and pred_label == targets_labels[target_i]:
+                    if target_i not in target_detected and iou_targets_pred[target_i] >= iou_thresh and pred_label == targets_labels[target_i]:
                         true_positives[pred_i] = 1
                         target_detected.append(target_i)
 
