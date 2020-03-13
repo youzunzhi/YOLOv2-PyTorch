@@ -2,7 +2,7 @@ import os
 import random
 import numpy as np
 from PIL import Image, ImageOps, ImageFile
-ImageFile.LOAD_TRUNCATED_IMAGES = True
+# ImageFile.LOAD_TRUNCATED_IMAGES = True
 import torch
 import torchvision.transforms as transforms
 import torch.nn.functional as F
