@@ -129,11 +129,6 @@ def get_batch_metrics(predictions, batch_targets):
                 if pred_label not in targets_labels:
                     continue
 
-                # iou, box_index = bbox_iou(pred_box.unsqueeze(0), target_boxes, x1y1x2y2=False).max(0) # TODO: 如果和这个pred_box iou最大的那个target_box并不是正确的box（类别不对），但是还有一个跟pred_box 的iou满足要求的正确的box，那这个应不应该算成一个tp？
-                # if iou >= iou_thresh and box_index not in target_detected and pred_label == targets_labels[box_index]:
-                #     true_positives[pred_i] = 1
-                #     target_detected += [box_index]
-
                 iou_targets_pred = bbox_iou(pred_box.unsqueeze(0), target_boxes, x1y1x2y2=False)
                 sorted_index = iou_targets_pred.argsort(descending=True)
                 for target_i in sorted_index:
@@ -141,10 +136,6 @@ def get_batch_metrics(predictions, batch_targets):
                         true_positives[pred_i] = 1
                         target_detected.append(target_i)
                         break
-
-                # for target_i, target_box in enumerate(target_boxes):
-                #     if target_i not in target_detected and iou_targets_pred[target_i] >= iou_thresh and pred_label == targets_labels[target_i]:
-                #         pass
 
         batch_metrics.append([true_positives, pred_conf, pred_labels])
 
