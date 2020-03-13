@@ -87,10 +87,10 @@ class YOLOv2Model(object):
             if epoch % self.cfg.EVAL_INTERVAL == 0 or epoch == 1:
                 self.eval(eval_dataloader)
 
-        if total_epochs % self.cfg.SAVE_INTERVAL == self.cfg.SAVE_INTERVAL - 1:
+        if total_epochs % self.cfg.SAVE_INTERVAL != 0:
             epoch_save_weights_fname = self.save_weights_fname_prefix + str(total_epochs) + '.weights'
             self.network.save_weights(epoch_save_weights_fname)
-        if total_epochs % self.cfg.EVAL_INTERVAL == self.cfg.EVAL_INTERVAL - 1:
+        if total_epochs % self.cfg.EVAL_INTERVAL != 0:
             self.eval(eval_dataloader)
 
 # class YOLOv2Model_deprecate(object):
