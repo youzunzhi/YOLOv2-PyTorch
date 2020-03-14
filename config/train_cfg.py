@@ -3,21 +3,21 @@ import torch
 
 _C = CN()
 _C.OUTPUT_DIR = 'runs/'
-_C.EXPERIMENT_NAME = 'coco_pretrain'
+_C.EXPERIMENT_NAME = 'voc_scratch-lr1e-03_6090'
 _C.CUDA_ID = '0'
-_C.EVAL_INTERVAL = 10
-_C.SAVE_INTERVAL = 10
+_C.EVAL_INTERVAL = 5
+_C.SAVE_INTERVAL = 5
 
-train_on = 'coco'
+train_on = 'voc'
 if train_on == 'coco':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2.cfg"
 elif train_on == 'voc':
     # _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-voc.cfg"
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-tiny-voc.cfg"
-_C.WEIGHTS_FNAME = "weights/darknet19_448.conv.23"
+# _C.WEIGHTS_FNAME = "weights/darknet19_448.conv.23"
 # _C.WEIGHTS_FNAME = "weights/yolov2-tiny-voc.weights"
 # _C.WEIGHTS_FNAME = "weights/yolov2.weights"
-# _C.WEIGHTS_FNAME = "no"
+_C.WEIGHTS_FNAME = "no"
 
 # for eval
 _C.CONF_THRESH = 0.005
@@ -37,5 +37,5 @@ _C.DATA.MULTISCALE = False
 _C.DATA.N_CPU = 0
 
 _C.TRAIN = CN()
-_C.TRAIN.TOTAL_EPOCHS = 400
-_C.TRAIN.LEARNING_RATE = 0.0001
+_C.TRAIN.TOTAL_EPOCHS = 160
+_C.TRAIN.LEARNING_RATE = 0.001
