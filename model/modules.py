@@ -131,7 +131,7 @@ class RegionLayer(nn.Module):
         target_mask = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0).bool()
         target_mask[sample_index, anchor_index, grid_index_y, grid_index_x] = True
 
-        # There's a chance that more than one target_boxes corresponds to the same anchor box.
+        # There's a chance that more than one target_boxes corresponds to the same anchor box. Like voc/VOCdevkit/VOC2007/JPEGImages/002826.jpg
         #最终的目标是修改anchor_index。那么就要找到需要修改的anchor_index，就要找到所有重复的target，就是一个list of list，其中每一个list存的是重复的target的index group。
         if target_mask.sum() != len(target_coords_grid_size):
             same_anchor_target_index_list = self.get_same_anchor_target_index_list(sample_index, grid_index_x, grid_index_y)
@@ -144,6 +144,9 @@ class RegionLayer(nn.Module):
                     [bbox_wh_iou(anchor, target_coords_grid_size[same_anchor_target_index_group, 2:]) for anchor in
                      self.anchors])
                 _, anchor_index = self.nms_anchor_iou(anchor_iou).max(0)
+            target_mask = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0).bool()
+            target_mask[sample_index, anchor_index, grid_index_y, grid_index_x] = True
+
         assert target_mask.sum() == len(target_coords_grid_size), "YOU failed"
 
         # compute the IoU between each target_box and its corresponding pred_box
