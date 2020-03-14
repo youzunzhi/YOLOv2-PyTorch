@@ -1,9 +1,9 @@
+import logging
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from utils.computation import bbox_iou, bbox_wh_iou
-
 
 class MaxPoolStride1(nn.Module):
     def __init__(self, kernel_size):
@@ -131,25 +131,20 @@ class RegionLayer(nn.Module):
         target_mask = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0).bool()
         target_mask[sample_index, anchor_index, grid_index_y, grid_index_x] = True
 
-        # 这个情况太难了，先算了，但是绝对应该要解决。
-        # assert target_mask.sum() == len(target_coords_grid_size), img_paths    # There's a chance that multiple target_boxes corresponds to the same anchor box. I don't know how to deal with that yet.
-        # while target_mask.sum() != len(target_coords_grid_size):   # There's a chance that multiple target_boxes corresponds to the same anchor box. I don't know how to deal with that yet.
-        #     conflicted_index_list = []
-        #     index_combination = torch.stack([sample_index, anchor_index, grid_index_y, grid_index_x]).t()
-        #
-        #     for i in range(index_combination.shape[0]-1):
-        #         for j in range(i+1, index_combination.shape[0]):
-        #             if (index_combination[i] == index_combination[j]).sum() == 4:
-        #                 appended_flag = False
-        #                 for k in range(len(conflicted_index_list)):
-        #                     if (index_combination[j] == index_combination[conflicted_index_list[k][0]]).sum() == 4:
-        #                         conflicted_index_list[k].append(j)
-        #                         assert len(conflicted_index_list[k]) <= self.num_anchors,
-        #                         appended_flag = True
-        #                 if not appended_flag:
-        #                     conflicted_index_list.append([i, j])
-        #                 # anchor_index[i] = torch.stack([bbox_wh_iou(anchor, target_coords_grid_size[:, 2:]) for anchor in self.anchors]).argsort(0)[-2][i]
+        # There's a chance that more than one target_boxes corresponds to the same anchor box.
+        #最终的目标是修改anchor_index。那么就要找到需要修改的anchor_index，就要找到所有重复的target，就是一个list of list，其中每一个list存的是重复的target的index group。
+        if target_mask.sum() != len(target_coords_grid_size):
+            same_anchor_target_index_list = self.get_same_anchor_target_index_list(sample_index, grid_index_x, grid_index_y)
+            for same_anchor_target_index_group in same_anchor_target_index_list:
+                logger = logging.getLogger('YOLOv2.Train')
+                logger.info(f'{img_paths[sample_index[same_anchor_target_index_group[0]]]} is causing the problem')
 
+                assert len(same_anchor_target_index_group) <= 5,  f"{img_paths[sample_index[same_anchor_target_index_group[0]]]} has more than 5 targets in the same grid. What a nasty situation."
+                anchor_iou = torch.stack(
+                    [bbox_wh_iou(anchor, target_coords_grid_size[same_anchor_target_index_group, 2:]) for anchor in
+                     self.anchors])
+                _, anchor_index = self.nms_anchor_iou(anchor_iou).max(0)
+        assert target_mask.sum() == len(target_coords_grid_size), "YOU failed"
 
         # compute the IoU between each target_box and its corresponding pred_box
         iou_target_pred = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0)
@@ -235,6 +230,47 @@ class RegionLayer(nn.Module):
         if seen < 12800:
             self.metrics['loss_prior'] = loss_prior.item()
         return total_loss
+
+    def get_same_anchor_target_index_list(self, sample_index, grid_index_x, grid_index_y):
+        assert len(sample_index) == len(grid_index_x) == len(grid_index_y)
+        same_anchor_target_index_list_with_only_one = []
+        target_tuple_list = []
+        for i in range(len(sample_index)):
+            cur_tuple = (sample_index[i], grid_index_x[i], grid_index_y[i])
+            target_tuple_list.append(cur_tuple)
+            new_group_flag = True
+            for same_anchor_target_index_group in same_anchor_target_index_list_with_only_one:
+                if target_tuple_list[same_anchor_target_index_group[0]] == cur_tuple:
+                    same_anchor_target_index_group.append(i)
+                    new_group_flag = False
+                    break
+            if new_group_flag:
+                same_anchor_target_index_list_with_only_one.append([i])
+        same_anchor_target_index_list = []
+        for same_anchor_target_index_group in same_anchor_target_index_list_with_only_one:
+            if len(same_anchor_target_index_group) > 1:
+                same_anchor_target_index_list.append(same_anchor_target_index_group)
+        assert len(same_anchor_target_index_list) > 0, "if not then why are we doing this"
+        return same_anchor_target_index_list
+
+    def nms_anchor_iou(self, anchor_iou):
+        finish_flag = False
+        while not finish_flag:
+            finish_flag = True
+            max_ious, max_anchor_index = anchor_iou.max(0)
+            for i in range(len(max_anchor_index)):
+                for j in range(i + 1, len(max_anchor_index)):
+                    if max_anchor_index[i] == max_anchor_index[j]:
+                        finish_flag = False
+                        if max_ious[i] < max_ious[j]:
+                            anchor_iou[max_anchor_index[i], i] = 0
+                        else:
+                            anchor_iou[max_anchor_index[i], j] = 0
+                        break
+                if not finish_flag:
+                    break
+
+        return anchor_iou
 
 
 class RegionLayer_deprecated(nn.Module):

@@ -25,7 +25,7 @@ class YOLOv2Model(object):
                                        lr=self.learning_rate,
                                        momentum=0.9,
                                        weight_decay=0.0005)
-            self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, [60, 90], 0.1)
+            self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, [60, 150], 0.1)
 
     def detect(self, img_path):
         self.network.eval()
