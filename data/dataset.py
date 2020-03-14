@@ -1,4 +1,4 @@
-import os
+import os, logging
 import random
 import numpy as np
 from PIL import Image, ImageOps, ImageFile
@@ -49,7 +49,15 @@ class YOLOv2Dataset(Dataset):
     def __getitem__(self, index):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
         label_path = self.label_files[index % len(self.img_files)].rstrip()
-        img = Image.open(img_path).convert('RGB')
+        try:
+            img = Image.open(img_path).convert('RGB')
+        except OSError:
+            logger = logging.getLogger('YOLOv2.Data')
+            img_path_0 = self.img_files[0].rstrip()
+            logger.info(f'{img_path} truncated, replace by {img_path_0}.')
+            label_path = self.label_files[0].rstrip()
+            img = Image.open(img_path_0).convert('RGB')
+
         if os.path.exists(label_path):
             boxes = torch.from_numpy(np.loadtxt(label_path).reshape(-1, 5))
             img, boxes = pad_img_to_square_and_adjust_boxes(img, boxes)
@@ -76,7 +84,8 @@ class YOLOv2Dataset(Dataset):
         if self.training and self.multiscale and self.batch_count % 10 == 0:
             self.img_size = random.choice(range(self.min_scale, self.max_scale + 1, 32))
         # Resize images to input shape
-        imgs = torch.stack([F.interpolate(img.unsqueeze(0), size=self.img_size, mode="nearest").squeeze(0) for img in imgs])
+        imgs = torch.stack(
+            [F.interpolate(img.unsqueeze(0), size=self.img_size, mode="nearest").squeeze(0) for img in imgs])
         self.batch_count += 1
 
         return imgs, targets, img_paths
@@ -124,7 +133,8 @@ def data_augmentation(img, boxes, jitter, hue, saturation, exposure):
     cropped_width = origin_width - left_crop_pixel - right_crop_pixel
     cropped_height = origin_height - top_crop_pixel - bottom_crop_pixel
 
-    img = img.crop((left_crop_pixel, top_crop_pixel, left_crop_pixel + cropped_width - 1, top_crop_pixel + cropped_height - 1))
+    img = img.crop(
+        (left_crop_pixel, top_crop_pixel, left_crop_pixel + cropped_width - 1, top_crop_pixel + cropped_height - 1))
 
     # ---- adjust label boxes ----
     # get xyxy pixel coord
@@ -139,7 +149,8 @@ def data_augmentation(img, boxes, jitter, hue, saturation, exposure):
     y2_pixel -= top_crop_pixel
     # constrain them inside the img
     x1_pixel[x1_pixel < 0], y1_pixel[y1_pixel < 0], x2_pixel[x2_pixel < 0], y2_pixel[y2_pixel < 0] = 0, 0, 0, 0
-    x1_pixel[x1_pixel > cropped_width], y1_pixel[y1_pixel > cropped_height], x2_pixel[x2_pixel > cropped_width], y2_pixel[y2_pixel > cropped_height] = cropped_width, cropped_height, cropped_width, cropped_height
+    x1_pixel[x1_pixel > cropped_width], y1_pixel[y1_pixel > cropped_height], x2_pixel[x2_pixel > cropped_width], \
+    y2_pixel[y2_pixel > cropped_height] = cropped_width, cropped_height, cropped_width, cropped_height
     # return to xywh pixel coord
     x_pixel = (x1_pixel + x2_pixel) / 2
     y_pixel = (y1_pixel + y2_pixel) / 2
@@ -196,9 +207,9 @@ def distort_image(im, hue, sat, val):
 def rand_scale(s):
     """convert from darknet"""
     scale = random.uniform(1, s)
-    if(random.randint(1,10000)%2):
+    if (random.randint(1, 10000) % 2):
         return scale
-    return 1./scale
+    return 1. / scale
 
 
 def get_imgs_size(imgs_path):

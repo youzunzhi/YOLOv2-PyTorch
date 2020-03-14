@@ -20,6 +20,7 @@ def prepare_experiment(cfg, log_prefix):
     else:
         log_dir_name = log_prefix + '-[{}]'.format((datetime.datetime.now()).strftime('%m%d%H%M%S'))
     log_dir_name += cfg.EXPERIMENT_NAME
+    os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
     cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, log_dir_name)
     os.mkdir(cfg.OUTPUT_DIR)
     cfg.freeze()

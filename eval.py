@@ -3,6 +3,7 @@ from config import eval_cfg
 from utils.utils import prepare_experiment, handle_keyboard_interruption, handle_other_exception
 from model.model import YOLOv2Model
 from data import make_dataloader
+
 os.environ["CUDA_VISIBLE_DEVICES"] = eval_cfg.CUDA_ID
 
 
