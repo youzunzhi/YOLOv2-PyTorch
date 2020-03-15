@@ -49,6 +49,9 @@ class YOLOv2Dataset(Dataset):
     def __getitem__(self, index):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
         label_path = self.label_files[index % len(self.img_files)].rstrip()
+        # debug
+        # img_path = '/Users/youzunzhi/pro/datasets/voc/VOCdevkit/VOC2007/JPEGImages/002826.jpg'
+        # label_path = '/Users/youzunzhi/pro/datasets/voc/VOCdevkit/VOC2007/labels/002826.txt'
         try:
             img = Image.open(img_path).convert('RGB')
         except OSError:

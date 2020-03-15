@@ -143,7 +143,7 @@ class RegionLayer(nn.Module):
                 anchor_iou = torch.stack(
                     [bbox_wh_iou(anchor, target_coords_grid_size[same_anchor_target_index_group, 2:]) for anchor in
                      self.anchors])
-                _, anchor_index = self.nms_anchor_iou(anchor_iou).max(0)
+                anchor_index[same_anchor_target_index_group] = self.nms_anchor_iou(anchor_iou).max(0)[1]
             target_mask = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0).bool()
             target_mask[sample_index, anchor_index, grid_index_y, grid_index_x] = True
 
