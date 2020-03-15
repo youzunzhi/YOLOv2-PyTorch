@@ -3,10 +3,10 @@ import torch
 
 _C = CN()
 _C.OUTPUT_DIR = 'runs/'
-_C.EXPERIMENT_NAME = 'voc_scratch-lr1e-04_60150_nasty'
+_C.EXPERIMENT_NAME = 'voc_scratch-lr1e-04_320350_nasty'
 _C.CUDA_ID = '0'
-_C.EVAL_INTERVAL = 5
-_C.SAVE_INTERVAL = 5
+_C.EVAL_INTERVAL = 10
+_C.SAVE_INTERVAL = 10
 
 train_on = 'voc'
 if train_on == 'coco':
@@ -37,5 +37,5 @@ _C.DATA.MULTISCALE = False
 _C.DATA.N_CPU = 0
 
 _C.TRAIN = CN()
-_C.TRAIN.TOTAL_EPOCHS = 200
+_C.TRAIN.TOTAL_EPOCHS = 400
 _C.TRAIN.LEARNING_RATE = 0.0001
