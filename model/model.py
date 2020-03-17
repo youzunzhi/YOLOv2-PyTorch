@@ -75,19 +75,16 @@ class YOLOv2Model(object):
                     targets = targets.cuda().detach()
 
                 loss = self.network(imgs, targets, img_paths, self.cfg.TRAIN.DONTCARE)
-                if batch_i == 11400:
-                    logger = logging.getLogger('YOLOv2.Train')
-                    logger.info(img_paths)
-                if loss > 10:
-                    logger = logging.getLogger('YOLOv2.Train')
-                    logger.info(img_paths)
-                    return
 
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
                 log_train_progress(epoch, batch_i, len(train_dataloader), self.optimizer.param_groups[0]['lr'], start_time,
                                    self.network.module_list[-1].metrics)
+                if loss > 10:
+                    logger = logging.getLogger('YOLOv2.Train')
+                    logger.info(f'loss got too high. May caused by one of {img_paths}.')
+                    return
 
             self.scheduler.step()
             if not isinstance(self.cfg.SAVE_INTERVAL, str) and (epoch % self.cfg.SAVE_INTERVAL == 0 or epoch == 1):

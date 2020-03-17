@@ -49,11 +49,15 @@ class YOLOv2Dataset(Dataset):
     def __getitem__(self, index):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
         label_path = self.label_files[index % len(self.img_files)].rstrip()
-        # TODO:debug
+        if img_path.find('COCO_val2014_000000200365')!= -1:
+            index = random.randint(0, len(self.img_files))
+            img_path = self.img_files[index % len(self.img_files)].rstrip()
+            label_path = self.label_files[index % len(self.img_files)].rstrip()
+        # for debugging
         # img_path = '/Users/youzunzhi/pro/datasets/voc/VOCdevkit/VOC2007/JPEGImages/002826.jpg'
         # label_path = '/Users/youzunzhi/pro/datasets/voc/VOCdevkit/VOC2007/labels/002826.txt'
-        img_path = '/work/u2263506/coco/images/val2014/COCO_val2014_000000200365.jpg'
-        label_path = '/work/u2263506/coco/labels/val2014/COCO_val2014_000000200365.txt'
+        # img_path = '/work/u2263506/coco/images/val2014/COCO_val2014_000000200365.jpg'
+        # label_path = '/work/u2263506/coco/labels/val2014/COCO_val2014_000000200365.txt'
         try:
             img = Image.open(img_path).convert('RGB')
         except OSError:
