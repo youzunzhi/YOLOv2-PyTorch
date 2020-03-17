@@ -6,7 +6,7 @@ _C.OUTPUT_DIR = 'runs/'
 _C.EXPERIMENT_NAME = 'voc_scratch-lr1e-04_320350_nasty'
 _C.CUDA_ID = '0'
 _C.EVAL_INTERVAL = 10
-_C.SAVE_INTERVAL = 10
+_C.SAVE_INTERVAL = 'best'
 
 train_on = 'voc'
 if train_on == 'coco':
@@ -39,3 +39,6 @@ _C.DATA.N_CPU = 0
 _C.TRAIN = CN()
 _C.TRAIN.TOTAL_EPOCHS = 400
 _C.TRAIN.LEARNING_RATE = 0.0001
+_C.TRAIN.LR_STEP = 0.1
+_C.TRAIN.LR_STEP_EPOCH = [320, 350]
+

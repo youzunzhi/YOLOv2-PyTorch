@@ -60,7 +60,7 @@ def setup_logger(name, log_path, distributed_rank=0):
         return logger
     ch = logging.StreamHandler(stream=sys.stdout)
     ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s")
+    formatter = logging.Formatter("%(asctime)s: %(message)s", '%m%d%H%M%S')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
@@ -136,7 +136,24 @@ def draw_detect_box(img_path, predictions, names_file):
     print('save detection to', save_path)
 
 
-def log_train_progress(epoch, total_epochs, batch_i, total_batch, lr, start_time, metrics):
+def log_train_progress(epoch, batch_i, total_batch, lr, start_time, metrics):
+    log_str = f"[Epoch {epoch}, Batch {batch_i}, LR {lr:.0e}] "
+    formats = {m: "%.6f" for m in metrics}
+    formats["grid_size"] = "%d"
+    formats["cls_acc"] = "%.2f%%"
+    for i, metric in enumerate(metrics):
+        row_metrics = formats[metric] % metrics.get(metric, 0)
+        log_str += f'{metric}:{row_metrics},'
+    # Determine approximate time left for epoch
+    epoch_batches_left = total_batch - (batch_i + 1)
+    time_left = datetime.timedelta(seconds=epoch_batches_left * (time.time() - start_time) / (batch_i + 1))
+    log_str += f"ETA:{time_left}"
+
+    logger = logging.getLogger('YOLOv2.Train')
+    logger.info(log_str)
+
+
+def log_train_progress_ascii_table(epoch, total_epochs, batch_i, total_batch, lr, start_time, metrics):
     log_str = "\n---- [Epoch %d/%d, Batch %d/%d, LR " % (epoch, total_epochs, batch_i, total_batch) + str(
         lr) + "] ----\n"
     metric_table = [["Metrics", "Region Layer"]]
@@ -157,8 +174,11 @@ def log_train_progress(epoch, total_epochs, batch_i, total_batch, lr, start_time
     logger.info(log_str)
 
 
-def show_eval_result(metrics, labels):
+def show_eval_result_and_get_mAP(metrics, labels):
     true_positives, pred_conf, pred_labels = [np.concatenate(x, 0) for x in list(zip(*metrics))]
     precision, recall, AP, f1, ap_class = ap_per_class(true_positives, pred_conf, pred_labels, labels)
     logger = logging.getLogger('YOLOv2.Eval')
-    logger.info(f"mAP: {AP.mean()}")
+    mAP = AP.mean()
+    logger.info(f"mAP: {mAP}")
+    return mAP
+

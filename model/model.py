@@ -5,7 +5,7 @@ import os, time, logging
 
 from model.networks import YOLOv2Network
 from utils.computation import *
-from utils.utils import parse_data_cfg, draw_detect_box, log_train_progress, show_eval_result
+from utils.utils import parse_data_cfg, draw_detect_box, log_train_progress, show_eval_result_and_get_mAP
 from data.dataset import get_imgs_size
 torch.manual_seed(0)
 
@@ -25,7 +25,7 @@ class YOLOv2Model(object):
                                        lr=self.learning_rate,
                                        momentum=0.9,
                                        weight_decay=0.0005)
-            self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, [320, 350], 0.1)
+            self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, self.cfg.TRAIN.LR_STEP_EPOCH, self.cfg.TRAIN.LR_STEP)
 
     def detect(self, img_path):
         self.network.eval()
@@ -60,11 +60,14 @@ class YOLOv2Model(object):
             metrics += get_batch_metrics(predictions, targets)
             # if batch_i > 1:
             #     break
-        show_eval_result(metrics, labels)
+        mAP = show_eval_result_and_get_mAP(metrics, labels)
+        return mAP
+
 
     def train(self, train_dataloader, eval_dataloader):
         total_epochs = self.cfg.TRAIN.TOTAL_EPOCHS
         self.network.train()
+        best_mAP = 0
         for epoch in range(1, total_epochs+1):
             start_time = time.time()
             for batch_i, (imgs, targets, img_paths) in enumerate(train_dataloader):
@@ -77,21 +80,24 @@ class YOLOv2Model(object):
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-                log_train_progress(epoch, total_epochs, batch_i, len(train_dataloader), self.learning_rate, start_time,
+                log_train_progress(epoch, batch_i, len(train_dataloader), self.optimizer.param_groups[0]['lr'], start_time,
                                    self.network.module_list[-1].metrics)
 
             self.scheduler.step()
-            if epoch % self.cfg.SAVE_INTERVAL == 0 or epoch == 1:
+            if not isinstance(self.cfg.SAVE_INTERVAL, str) and (epoch % self.cfg.SAVE_INTERVAL == 0 or epoch == 1):
                 epoch_save_weights_fname = f'{self.save_weights_fname_prefix}-{epoch}.weights'
                 self.network.save_weights(epoch_save_weights_fname)
             if epoch % self.cfg.EVAL_INTERVAL == 0 or epoch == 1:
-                self.eval(eval_dataloader)
+                mAP = self.eval(eval_dataloader)
+                if self.cfg.SAVE_INTERVAL == 'best':
+                    if mAP > best_mAP:
+                        best_mAP = mAP
+                        self.network.save_weights(f'{self.cfg.EXPERIMENT_NAME}-best.weights')
 
-        if total_epochs % self.cfg.SAVE_INTERVAL != 0:
-            epoch_save_weights_fname = self.save_weights_fname_prefix + str(total_epochs) + '.weights'
-            self.network.save_weights(epoch_save_weights_fname)
         if total_epochs % self.cfg.EVAL_INTERVAL != 0:
-            self.eval(eval_dataloader)
+            mAP = self.eval(eval_dataloader)
+            if mAP > best_mAP:
+                self.network.save_weights(f'{self.cfg.EXPERIMENT_NAME}-best.weights')
 
 # class YOLOv2Model_deprecate(object):
 #     def __init__(self, cfg, training=False):
