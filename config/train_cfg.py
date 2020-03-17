@@ -3,7 +3,7 @@ import torch
 
 _C = CN()
 _C.OUTPUT_DIR = 'runs/'
-_C.EXPERIMENT_NAME = 'coco_test11400'
+_C.EXPERIMENT_NAME = 'coco_pretrain_multi'
 _C.CUDA_ID = '0'
 _C.EVAL_INTERVAL = 10
 _C.SAVE_INTERVAL = 'best'
@@ -14,9 +14,9 @@ if train_on == 'coco':
 elif train_on == 'voc':
     # _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-voc.cfg"
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-tiny-voc.cfg"
-# _C.WEIGHTS_FNAME = "weights/darknet19_448.conv.23"
+_C.WEIGHTS_FNAME = "weights/darknet19_448.conv.23"
 # _C.WEIGHTS_FNAME = "weights/yolov2-tiny-voc.weights"
-_C.WEIGHTS_FNAME = "weights/yolov2.weights"
+# _C.WEIGHTS_FNAME = "weights/yolov2.weights"
 # _C.WEIGHTS_FNAME = "no"
 
 # for eval
@@ -33,7 +33,7 @@ elif train_on == 'voc':
     _C.DATA.DATA_CFG_FNAME = "pjreddie_files/voc.data"
 _C.DATA.IMG_SIZE = 416
 _C.DATA.BATCH_SIZE = 4
-_C.DATA.MULTISCALE = False
+_C.DATA.MULTISCALE = True
 _C.DATA.N_CPU = 0
 
 _C.TRAIN = CN()
