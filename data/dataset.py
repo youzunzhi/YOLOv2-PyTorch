@@ -52,8 +52,8 @@ class YOLOv2Dataset(Dataset):
         # TODO:debug
         # img_path = '/Users/youzunzhi/pro/datasets/voc/VOCdevkit/VOC2007/JPEGImages/002826.jpg'
         # label_path = '/Users/youzunzhi/pro/datasets/voc/VOCdevkit/VOC2007/labels/002826.txt'
-        img_path = '/work/u2263506/coco/images/train2014/COCO_train2014_000000481627.jpg'
-        label_path = '/work/u2263506/coco/labels/train2014/COCO_train2014_000000481627.txt'
+        img_path = '/work/u2263506/coco/images/train2014/COCO_train2014_000000002842.jpg'
+        label_path = '/work/u2263506/coco/labels/train2014/COCO_train2014_000000002842.txt'
         try:
             img = Image.open(img_path).convert('RGB')
         except OSError:
