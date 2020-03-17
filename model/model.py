@@ -63,7 +63,6 @@ class YOLOv2Model(object):
         mAP = show_eval_result_and_get_mAP(metrics, labels)
         return mAP
 
-
     def train(self, train_dataloader, eval_dataloader):
         total_epochs = self.cfg.TRAIN.TOTAL_EPOCHS
         self.network.train()
@@ -76,6 +75,13 @@ class YOLOv2Model(object):
                     targets = targets.cuda().detach()
 
                 loss = self.network(imgs, targets, img_paths)
+                if batch_i == 11400:
+                    logger = logging.getLogger('YOLOv2.Train')
+                    logger.info(img_paths)
+                if loss > 10:
+                    logger = logging.getLogger('YOLOv2.Train')
+                    logger.info(img_paths)
+                    return
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -87,12 +93,16 @@ class YOLOv2Model(object):
             if not isinstance(self.cfg.SAVE_INTERVAL, str) and (epoch % self.cfg.SAVE_INTERVAL == 0 or epoch == 1):
                 epoch_save_weights_fname = f'{self.save_weights_fname_prefix}-{epoch}.weights'
                 self.network.save_weights(epoch_save_weights_fname)
+                logger = logging.getLogger('YOLOv2.Train')
+                logger.info(f'saved weight to {epoch_save_weights_fname}')
             if epoch % self.cfg.EVAL_INTERVAL == 0 or epoch == 1:
                 mAP = self.eval(eval_dataloader)
                 if self.cfg.SAVE_INTERVAL == 'best':
                     if mAP > best_mAP:
                         best_mAP = mAP
                         self.network.save_weights(f'{self.cfg.EXPERIMENT_NAME}-best.weights')
+                        logger = logging.getLogger('YOLOv2.Train')
+                        logger.info(f'saved weight to {self.cfg.EXPERIMENT_NAME}-best.weights')
 
         if total_epochs % self.cfg.EVAL_INTERVAL != 0:
             mAP = self.eval(eval_dataloader)

@@ -8,7 +8,7 @@ _C.CUDA_ID = '0'
 _C.EVAL_INTERVAL = 10
 _C.SAVE_INTERVAL = 'best'
 
-train_on = 'voc'
+train_on = 'coco'
 if train_on == 'coco':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2.cfg"
 elif train_on == 'voc':
@@ -16,8 +16,8 @@ elif train_on == 'voc':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-tiny-voc.cfg"
 # _C.WEIGHTS_FNAME = "weights/darknet19_448.conv.23"
 # _C.WEIGHTS_FNAME = "weights/yolov2-tiny-voc.weights"
-# _C.WEIGHTS_FNAME = "weights/yolov2.weights"
-_C.WEIGHTS_FNAME = "no"
+_C.WEIGHTS_FNAME = "weights/yolov2.weights"
+# _C.WEIGHTS_FNAME = "no"
 
 # for eval
 _C.CONF_THRESH = 0.005
