@@ -74,7 +74,7 @@ class YOLOv2Model(object):
                     imgs = imgs.cuda()
                     targets = targets.cuda().detach()
 
-                loss = self.network(imgs, targets, img_paths)
+                loss = self.network(imgs, targets, img_paths, self.cfg.TRAIN.DONTCARE)
                 if batch_i == 11400:
                     logger = logging.getLogger('YOLOv2.Train')
                     logger.info(img_paths)

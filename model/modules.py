@@ -66,7 +66,7 @@ class RegionLayer(nn.Module):
         self.thresh = float(module_def['thresh'])
         self.rescore = int(module_def['rescore'])
 
-    def forward(self, x, targets, seen=0, img_paths=''):
+    def forward(self, x, targets, seen=0, img_paths='', dontcare=True):
         """
         :param x: the output of last layer. Shape: (B, A*(C+5), H, W).
         :param targets: the target bboxes. Each row has 6 num: sample_index, cls, x, y, w, h (0~1). shape: (num_target_box, 6)
@@ -131,23 +131,28 @@ class RegionLayer(nn.Module):
         target_mask = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0).bool()
         target_mask[sample_index, anchor_index, grid_index_y, grid_index_x] = True
 
-        # There's a chance that more than one target_boxes corresponds to the same anchor box. Like voc/VOCdevkit/VOC2007/JPEGImages/002826.jpg
-        #最终的目标是修改anchor_index。那么就要找到需要修改的anchor_index，就要找到所有重复的target，就是一个list of list，其中每一个list存的是重复的target的index group。
-        if target_mask.sum() != len(target_coords_grid_size):
-            same_anchor_target_index_list = self.get_same_anchor_target_index_list(sample_index, grid_index_x, grid_index_y)
-            for same_anchor_target_index_group in same_anchor_target_index_list:
-                logger = logging.getLogger('YOLOv2.Train')
-                logger.info(f'{img_paths[sample_index[same_anchor_target_index_group[0]]]} is causing the problem')
+        if not dontcare:
+            # There's a chance that more than one target_boxes corresponds to the same anchor box. Like voc/VOCdevkit/VOC2007/JPEGImages/002826.jpg
+            #最终的目标是修改anchor_index。那么就要找到需要修改的anchor_index，就要找到所有重复的target，就是一个list of list，其中每一个list存的是重复的target的index group。
+            if target_mask.sum() != len(target_coords_grid_size):
+                same_anchor_target_index_list = self.get_same_anchor_target_index_list(sample_index, grid_index_x, grid_index_y)
+                for same_anchor_target_index_group in same_anchor_target_index_list:
+                    # logger = logging.getLogger('YOLOv2.Train')
+                    # logger.info(f'{img_paths[sample_index[same_anchor_target_index_group[0]]]} is causing the problem')
+                    # There's a chance that more than 5 target_boxes corresponds to the same anchor box, like COCO_train2014_000000279454.jpg. I don't know how to deal with it yet.
+                    if len(same_anchor_target_index_group) > 5:
+                        logger = logging.getLogger('YOLOv2.Train')
+                        logger.info(f'{img_paths[sample_index[same_anchor_target_index_group[0]]]} has more than 5 targets in the same grid. Not dealing with it.')
+                        continue
+                    assert len(same_anchor_target_index_group) <= 5,  f"{img_paths[sample_index[same_anchor_target_index_group[0]]]} has more than 5 targets in the same grid. What a nasty situation."
+                    anchor_iou = torch.stack(
+                        [bbox_wh_iou(anchor, target_coords_grid_size[same_anchor_target_index_group, 2:]) for anchor in
+                         self.anchors])
+                    anchor_index[same_anchor_target_index_group] = self.nms_anchor_iou(anchor_iou).max(0)[1]
+                target_mask = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0).bool()
+                target_mask[sample_index, anchor_index, grid_index_y, grid_index_x] = True
 
-                assert len(same_anchor_target_index_group) <= 5,  f"{img_paths[sample_index[same_anchor_target_index_group[0]]]} has more than 5 targets in the same grid. What a nasty situation."
-                anchor_iou = torch.stack(
-                    [bbox_wh_iou(anchor, target_coords_grid_size[same_anchor_target_index_group, 2:]) for anchor in
-                     self.anchors])
-                anchor_index[same_anchor_target_index_group] = self.nms_anchor_iou(anchor_iou).max(0)[1]
-            target_mask = torch_byte_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0).bool()
-            target_mask[sample_index, anchor_index, grid_index_y, grid_index_x] = True
-
-        assert target_mask.sum() == len(target_coords_grid_size), "YOU failed"
+            assert target_mask.sum() == len(target_coords_grid_size), "YOU failed"
 
         # compute the IoU between each target_box and its corresponding pred_box
         iou_target_pred = torch_float_tensor(num_samples, self.num_anchors, grid_size, grid_size).fill_(0)
