@@ -49,7 +49,7 @@ class YOLOv2Dataset(Dataset):
     def __getitem__(self, index):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
         label_path = self.label_files[index % len(self.img_files)].rstrip()
-        if img_path.find('COCO_val2014_000000200365') != -1 or img_path.find('COCO_train2014_000000550395') != -1:
+        while img_path.find('COCO_val2014_000000200365') != -1 or img_path.find('COCO_train2014_000000550395') != -1:
             index = random.randint(0, len(self.img_files))
             img_path = self.img_files[index % len(self.img_files)].rstrip()
             label_path = self.label_files[index % len(self.img_files)].rstrip()
