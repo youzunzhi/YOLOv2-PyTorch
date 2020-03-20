@@ -17,8 +17,7 @@ class YOLOv2Model(object):
         self.use_cuda = torch.cuda.is_available()
         self.network = YOLOv2Network(cfg.MODEL_CFG_FNAME, cfg.WEIGHTS_FNAME, self.use_cuda)
         if training:
-            self.save_weights_fname_prefix = os.path.join(self.cfg.OUTPUT_DIR,
-                                                          cfg.MODEL_CFG_FNAME.split('/')[-1].split('.')[0])
+            self.save_weights_fname_prefix = os.path.join(self.cfg.OUTPUT_DIR, cfg.EXPERIMENT_NAME)
             self.seen = 0
             self.learning_rate = cfg.TRAIN.LEARNING_RATE
             self.optimizer = optim.SGD(self.network.parameters(),
@@ -97,9 +96,9 @@ class YOLOv2Model(object):
                 if self.cfg.SAVE_INTERVAL == 'best':
                     if mAP > best_mAP:
                         best_mAP = mAP
-                        self.network.save_weights(f'{self.cfg.EXPERIMENT_NAME}-best.weights')
+                        self.network.save_weights(f'{self.save_weights_fname_prefix}-best.weights')
                         logger = logging.getLogger('YOLOv2.Train')
-                        logger.info(f'saved weight to {self.cfg.EXPERIMENT_NAME}-best.weights')
+                        logger.info(f'saved weight to {self.save_weights_fname_prefix}-best.weights')
 
         if total_epochs % self.cfg.EVAL_INTERVAL != 0:
             mAP = self.eval(eval_dataloader)

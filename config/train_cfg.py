@@ -3,7 +3,7 @@ import torch
 
 _C = CN()
 _C.OUTPUT_DIR = 'runs/'
-_C.EXPERIMENT_NAME = 'coco_pretrain_multi'
+_C.EXPERIMENT_NAME = 'coco_pretrain'
 _C.CUDA_ID = '0'
 _C.EVAL_INTERVAL = 10
 _C.SAVE_INTERVAL = 'best'
@@ -33,7 +33,7 @@ elif train_on == 'voc':
     _C.DATA.DATA_CFG_FNAME = "pjreddie_files/voc.data"
 _C.DATA.IMG_SIZE = 416
 _C.DATA.BATCH_SIZE = 4
-_C.DATA.MULTISCALE = True
+_C.DATA.MULTISCALE = False
 _C.DATA.N_CPU = 0
 
 _C.TRAIN = CN()
