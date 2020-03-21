@@ -6,7 +6,6 @@ import os, time, logging
 from model.networks import YOLOv2Network
 from utils.computation import *
 from utils.utils import parse_data_cfg, draw_detect_box, log_train_progress, show_eval_result_and_get_mAP
-from data.dataset import get_imgs_size
 torch.manual_seed(0)
 
 
