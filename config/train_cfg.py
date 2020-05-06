@@ -14,10 +14,10 @@ if train_on == 'coco':
 elif train_on == 'voc':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-voc.cfg"
     # _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-tiny-voc.cfg"
-_C.WEIGHTS_FNAME = "weights/darknet19_448.conv.23"
+# _C.WEIGHTS_FNAME = "weights/darknet19_448.conv.23"
 # _C.WEIGHTS_FNAME = "weights/yolov2-tiny-voc.weights"
 # _C.WEIGHTS_FNAME = "weights/yolov2.weights"
-# _C.WEIGHTS_FNAME = "no"
+_C.WEIGHTS_FNAME = "no"
 
 # for eval
 _C.CONF_THRESH = 0.005
