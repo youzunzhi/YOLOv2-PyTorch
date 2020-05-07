@@ -145,3 +145,18 @@ WEIGHTS_FNAME weights/darknet19_448.conv.23 \
 DATA.DATA_CFG_FNAME pjreddie_files/voc.data
 ```
 
+
+
+## Credits
+
+I referred to many fantastic repos and blogs during the implementation:
+
+[eriklindernoren/PyTorch-YOLOv3](https://github.com/eriklindernoren/PyTorch-YOLOv3)
+
+[marvis/pytorch-yolo2](https://github.com/marvis/pytorch-yolo2)
+
+[pjreddie/darknet](https://github.com/pjreddie/darknet)
+
+[Training Object Detection (YOLOv2) from scratch using Cyclic Learning Rates](https://towardsdatascience.com/training-object-detection-yolov2-from-scratch-using-cyclic-learning-rates-b3364f7e4755)
+
+[目标检测|YOLOv2原理与实现(附YOLOv3)](https://zhuanlan.zhihu.com/p/35325884)
