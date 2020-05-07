@@ -8,8 +8,8 @@ reveal the essence of this model. So, if you find anything confusing please feel
 git clone https://github.com/youzunzhi/YOLOv2-PyTorch.git 
 ```
 ### Prerequisites
-> python 3.x
-> PyTorch >= 1.0.1
+> python 3.x \
+> PyTorch >= 1.0.1 \
 > [yacs](https://github.com/rbgirshick/yacs)
 
 ### Download Pretrained weights
