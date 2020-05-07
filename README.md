@@ -126,7 +126,7 @@ DATA.IMG_SIZE 416
 
 ## Training
 
-You can modify the configs in config/eval_cfg.py or in command line following the usage of yacs. For example:
+You can modify the configs in config/train_cfg.py or in command line following the usage of yacs. For example:
 
 Train on Pascal VOC with pretrained darknet backbone
 ```shell script
@@ -135,13 +135,15 @@ WEIGHTS_FNAME weights/darknet19_448.conv.23 \
 DATA.DATA_CFG_FNAME pjreddie_files/voc.data
 ```
 
-Train on Pascal VOC from scratch with Multi-Scale Training technique and 
+Train on COCO from scratch with Multi-Scale Training technique and 
 don't care about the nasty situation (see [model/modules.py, line 134](https://github.com/youzunzhi/YOLOv2-PyTorch/blob/98352ff18c8a9bcde4e2d07505fd30da589a4abc/model/modules.py#L134))
 
 ```shell script
-python train.py MODEL_CFG_FNAME pjreddie_files/yolov2-voc.cfg \
-WEIGHTS_FNAME weights/darknet19_448.conv.23 \
-DATA.DATA_CFG_FNAME pjreddie_files/voc.data
+python train.py MODEL_CFG_FNAME pjreddie_files/yolov2.cfg \
+WEIGHTS_FNAME no \
+DATA.DATA_CFG_FNAME pjreddie_files/coco.data\
+DATA.MULTISCALE True
+TRAIN.DONTCARE True
 ```
 
 
