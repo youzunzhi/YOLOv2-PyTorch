@@ -41,5 +41,5 @@ _C.TRAIN.TOTAL_EPOCHS = 800
 _C.TRAIN.LEARNING_RATE = 0.0001
 _C.TRAIN.LR_STEP = 0.1
 _C.TRAIN.LR_STEP_EPOCH = [600, 700]
-_C.TRAIN.DONTCARE = False # don't care about the nasty situation
+_C.TRAIN.DONTCARE = False   # don't care about the nasty situation
 

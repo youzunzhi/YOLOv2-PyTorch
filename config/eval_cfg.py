@@ -4,7 +4,7 @@ _C = CN()
 _C.OUTPUT_DIR = 'runs/'
 _C.EXPERIMENT_NAME = 'coco'
 _C.CUDA_ID = '0'
-eval_on = 'coco'
+eval_on = 'voc'
 if eval_on == 'coco':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2.cfg"
     _C.WEIGHTS_FNAME = "weights/yolov2.weights"

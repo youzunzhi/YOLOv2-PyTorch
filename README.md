@@ -16,7 +16,7 @@ git clone https://github.com/youzunzhi/YOLOv2-PyTorch.git
 ```shell script
 cd weights/ 
 wget -c https://pjreddie.com/media/files/yolov2-voc.weights # weights trained on voc
-wget -c https://pjreddie.com/media/files/darknet19_448.conv.23 # weights pretrained on ImageNet
+wget -c https://pjreddie.com/media/files/darknet19_448.conv.23 # darknet backbone pretrained on ImageNet
 ```
 ### Get Datasets
 #### Pascal VOC
@@ -38,7 +38,7 @@ cat 2007_train.txt 2007_val.txt 2012_*.txt > voc_train.txt
 ```
 ##### Modify Cfg for Pascal VOC
 Change the cfg/voc.data config file
-```shell script
+```
 classes= 20
 train  = <path-to-voc>/train.txt
 valid  = <path-to-voc>/2007_test.txt
@@ -46,18 +46,100 @@ names = data/voc.names
 backup = backup
 ```
 
+#### COCO
+
+##### Download the dataset
+
+```shell script
+cd <path-to-coco>/
+# Clone COCO API
+git clone https://github.com/pdollar/coco
+cd coco
+
+mkdir images
+cd images
+
+# Download Images
+wget -c https://pjreddie.com/media/files/train2014.zip
+wget -c https://pjreddie.com/media/files/val2014.zip
+
+# Unzip
+unzip -q train2014.zip
+unzip -q val2014.zip
+
+cd ..
+
+# Download COCO Metadata
+wget -c https://pjreddie.com/media/files/instances_train-val2014.zip
+wget -c https://pjreddie.com/media/files/coco/5k.part
+wget -c https://pjreddie.com/media/files/coco/trainvalno5k.part
+wget -c https://pjreddie.com/media/files/coco/labels.tgz
+tar xzf labels.tgz
+unzip -q instances_train-val2014.zip
+
+# Set Up Image Lists
+paste <(awk "{print \"$PWD\"}" <5k.part) 5k.part | tr -d '\t' > 5k.txt
+paste <(awk "{print \"$PWD\"}" <trainvalno5k.part) trainvalno5k.part | tr -d '\t' > trainvalno5k.txt
+```
+
+##### Modify Cfg for COCO
+
+Change the cfg/coco.data config file
+
+```
+classes= 80
+train  = <path-to-coco>/trainvalno5k.txt
+valid  = <path-to-coco>/5k.txt
+names = data/coco.names
+backup = backup
+```
+
+
+
 ## Evaluation
-Evaluate full YOLOv2 model on Pascal VOC
+
+You can modify the configs in config/eval_cfg.py or in command line 
+following the usage of yacs. For example:
+
+Evaluate YOLOv2 on COCO
 ```shell script
 python eval.py MODEL_CFG_FNAME pjreddie_files/yolov2-voc.cfg \
 WEIGHTS_FNAME weights/yolov2-voc.weights \
-DATA_CFG_FNAME pjreddie_files/voc.data
+DATA.DATA_CFG_FNAME pjreddie_files/voc.data
 ```
 
-Evaluate tiny YOLOv2 model on Pascal VOC
+Evaluate  YOLOv2-tiny on Pascal VOC with image size of 416x416
 ```shell script
 python eval.py MODEL_CFG_FNAME pjreddie_files/yolov2-tiny-voc.cfg \
 WEIGHTS_FNAME weights/yolov2-tiny-voc.weights \
-DATA_CFG_FNAME pjreddie_files/voc.data
+DATA.DATA_CFG_FNAME pjreddie_files/voc.data \
+DATA.IMG_SIZE 416
 ```
 
+| Model       | Dataset | Image Size | mAP (this implementation) | mAP (paper) |
+| ----------- | ------- | ---------- | ------------------------- | ----------- |
+| YOLOv2 COCO | COCO    | 608        | 46.9                      | 48.1        |
+|             |         |            | 56.4                      | 57.1        |
+|             |         |            |                           |             |
+
+
+
+## Training
+
+You can modify the configs in config/eval_cfg.py or in command line 
+following the usage of yacs. For example:
+
+Train on Pascal VOC with pretrained darknet backbone
+```shell script
+python train.py MODEL_CFG_FNAME pjreddie_files/yolov2-voc.cfg \
+WEIGHTS_FNAME weights/darknet19_448.conv.23 \
+DATA.DATA_CFG_FNAME pjreddie_files/voc.data
+```
+
+Train on Pascal VOC from scratch with Multi-Scale Training technique and 
+don't care about the nasty situation (see model/modules.py, line 134)
+```shell script
+python train.py MODEL_CFG_FNAME pjreddie_files/yolov2-voc.cfg \
+WEIGHTS_FNAME weights/darknet19_448.conv.23 \
+DATA.DATA_CFG_FNAME pjreddie_files/voc.data
+```
