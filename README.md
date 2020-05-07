@@ -8,14 +8,15 @@ reveal the essence of this model. So, if you find anything confusing please feel
 git clone https://github.com/youzunzhi/YOLOv2-PyTorch.git 
 ```
 ### Prerequisites
-> python 3.x\
-> PyTorch >= 1.0.1\
+> python 3.x
+> PyTorch >= 1.0.1
 > [yacs](https://github.com/rbgirshick/yacs)
 
 ### Download Pretrained weights
 ```shell script
 cd weights/ 
-wget -c https://pjreddie.com/media/files/yolov2-voc.weights # weights trained on voc
+wget -c https://pjreddie.com/media/files/yolov2.weights # yolov2 trained on coco
+wget -c https://pjreddie.com/media/files/yolov2-tiny-voc.weights # yolov2-tiny trained on voc
 wget -c https://pjreddie.com/media/files/darknet19_448.conv.23 # darknet backbone pretrained on ImageNet
 ```
 ### Get Datasets
@@ -98,8 +99,7 @@ backup = backup
 
 ## Evaluation
 
-You can modify the configs in config/eval_cfg.py or in command line 
-following the usage of yacs. For example:
+You can modify the configs in config/eval_cfg.py or in command line following the usage of yacs. For example:
 
 Evaluate YOLOv2 on COCO
 ```shell script
@@ -118,16 +118,16 @@ DATA.IMG_SIZE 416
 
 | Model       | Dataset | Image Size | mAP (this implementation) | mAP (paper) |
 | ----------- | ------- | ---------- | ------------------------- | ----------- |
-| YOLOv2 COCO | COCO    | 608        | 46.9                      | 48.1        |
-|             |         |            | 56.4                      | 57.1        |
-|             |         |            |                           |             |
+| YOLOv2      | COCO    | 608        | 46.9                      | 48.1        |
+| YOLOv2-tiny | VOC     | 416        | 57.3                      | 57.1        |
+
+(Got `nan` when evaluating YOLOv2 on VOC. I guess there's something wrong with yolov2-voc.weights on [pjreddie.com](https://pjreddie.com/media/files/yolov2-voc.weights).)
 
 
 
 ## Training
 
-You can modify the configs in config/eval_cfg.py or in command line 
-following the usage of yacs. For example:
+You can modify the configs in config/eval_cfg.py or in command line following the usage of yacs. For example:
 
 Train on Pascal VOC with pretrained darknet backbone
 ```shell script
@@ -137,9 +137,11 @@ DATA.DATA_CFG_FNAME pjreddie_files/voc.data
 ```
 
 Train on Pascal VOC from scratch with Multi-Scale Training technique and 
-don't care about the nasty situation (see model/modules.py, line 134)
+don't care about the nasty situation (see [model/modules.py, line 134](https://github.com/youzunzhi/YOLOv2-PyTorch/blob/98352ff18c8a9bcde4e2d07505fd30da589a4abc/model/modules.py#L134))
+
 ```shell script
 python train.py MODEL_CFG_FNAME pjreddie_files/yolov2-voc.cfg \
 WEIGHTS_FNAME weights/darknet19_448.conv.23 \
 DATA.DATA_CFG_FNAME pjreddie_files/voc.data
 ```
+
