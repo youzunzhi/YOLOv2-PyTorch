@@ -36,7 +36,7 @@ wget https://pjreddie.com/media/files/voc_label.py
 python voc_label.py
 cat 2007_train.txt 2007_val.txt 2012_*.txt > voc_train.txt
 ```
-##### Modify Cfg for Pascal Data
+##### Modify Cfg for Pascal VOC
 Change the cfg/voc.data config file
 ```shell script
 classes= 20
@@ -47,3 +47,17 @@ backup = backup
 ```
 
 ## Evaluation
+Evaluate full YOLOv2 model on Pascal VOC
+```shell script
+python eval.py MODEL_CFG_FNAME pjreddie_files/yolov2-voc.cfg \
+WEIGHTS_FNAME weights/yolov2-voc.weights \
+DATA_CFG_FNAME pjreddie_files/voc.data
+```
+
+Evaluate tiny YOLOv2 model on Pascal VOC
+```shell script
+python eval.py MODEL_CFG_FNAME pjreddie_files/yolov2-tiny-voc.cfg \
+WEIGHTS_FNAME weights/yolov2-tiny-voc.weights \
+DATA_CFG_FNAME pjreddie_files/voc.data
+```
+

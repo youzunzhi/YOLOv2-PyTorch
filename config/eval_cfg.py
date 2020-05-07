@@ -4,15 +4,15 @@ _C = CN()
 _C.OUTPUT_DIR = 'runs/'
 _C.EXPERIMENT_NAME = 'voc'
 _C.CUDA_ID = '0'
-eval_on = 'voc'
+eval_on = 'coco'
 if eval_on == 'coco':
     _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2.cfg"
     _C.WEIGHTS_FNAME = "weights/yolov2.weights"
 elif eval_on == 'voc':
-    _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-voc.cfg"
-    _C.WEIGHTS_FNAME = "weights/yolov2-voc.weights"
-    # _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-tiny-voc.cfg"
-    # _C.WEIGHTS_FNAME = "weights/yolov2-tiny-voc.weights"
+    # _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-voc.cfg"
+    # _C.WEIGHTS_FNAME = "weights/yolov2-voc.weights"
+    _C.MODEL_CFG_FNAME = "pjreddie_files/yolov2-tiny-voc.cfg"
+    _C.WEIGHTS_FNAME = "weights/yolov2-tiny-voc.weights"
 _C.CONF_THRESH = 0.005
 _C.NMS_THRESH = 0.45
 
@@ -25,7 +25,7 @@ if eval_on == 'coco':
 
 elif eval_on == 'voc':
     _C.DATA.DATA_CFG_FNAME = "pjreddie_files/voc.data"
-_C.DATA.IMG_SIZE = 608
+_C.DATA.IMG_SIZE = 416
 _C.DATA.BATCH_SIZE = 1
 _C.DATA.MULTISCALE = False
 _C.DATA.N_CPU = 0
