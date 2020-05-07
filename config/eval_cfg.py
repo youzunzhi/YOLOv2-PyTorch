@@ -2,7 +2,7 @@ from yacs.config import CfgNode as CN
 import torch
 _C = CN()
 _C.OUTPUT_DIR = 'runs/'
-_C.EXPERIMENT_NAME = 'voc'
+_C.EXPERIMENT_NAME = 'coco'
 _C.CUDA_ID = '0'
 eval_on = 'coco'
 if eval_on == 'coco':
