@@ -2,7 +2,11 @@ import argparse
 import os, sys, time, datetime, math, shutil
 import logging
 import numpy as np
-import cv2, torch
+import torch, random
+from PIL import Image
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.ticker import NullLocator
 from terminaltables import AsciiTable
 from utils.computation import ap_per_class
 
@@ -102,38 +106,79 @@ def parse_data_cfg(path):
     return data_cfg
 
 
-def draw_detect_box(img_path, predictions, names_file):
-    def get_color(channel, offset, class_num):
-        colors = torch.FloatTensor([[1, 0, 1], [0, 0, 1], [0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 0, 0]])
-        ratio = float(offset) / class_num * 5
-        i = int(math.floor(ratio))
-        j = int(math.ceil(ratio))
-        ratio = ratio - i
-        r = (1 - ratio) * colors[i][channel] + ratio * colors[j][channel]
-        return int(r * 255)
-
+def draw_detect_box(img_path, predictions, names_file, save_path):
     class_names = load_class_names(names_file)
 
-    def get_rgb(class_id):
-        class_num = len(class_names)
-        offset = class_id * 123457 % class_num
-        red = get_color(2, offset, class_num)
-        green = get_color(1, offset, class_num)
-        blue = get_color(0, offset, class_num)
-        rgb = (red, green, blue)
-        return rgb
+    cmap = plt.get_cmap("tab20b")
+    colors = [cmap(i) for i in np.linspace(0, 1, 20)]
+    unique_labels = predictions[:, -1].cpu().unique()
+    n_cls_preds = len(unique_labels)
+    bbox_colors = random.sample(colors, n_cls_preds)
 
-    img = cv2.imread(img_path)
-    save_path = 'detect-' + img_path.split('/')[-1]
+    img = np.array(Image.open(img_path))
+    plt.figure()
+    fig, ax = plt.subplots(1)
+    ax.imshow(img)
+
+    # rescale pred_boxes to image size
+    predictions[:, 0] *= img.shape[1]
+    predictions[:, 1] *= img.shape[0]
+    predictions[:, 2] *= img.shape[1]
+    predictions[:, 3] *= img.shape[0]
+
     for prediction in predictions:
-        left_top_x, left_top_y, right_bottom_x, right_bottom_y, class_id = prediction[0], prediction[1], prediction[2], \
+        center_x, center_y, img_w, img_h, class_id = prediction[0], prediction[1], prediction[2], \
                                                                            prediction[3], prediction[-1]
-        color_tuple = get_rgb(class_id)
-        cv2.rectangle(img, (left_top_x, left_top_y), (right_bottom_x, right_bottom_y), color_tuple, 4)
-        cv2.putText(img, class_names[int(class_id)], (left_top_x, left_top_y + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    color_tuple)
-    cv2.imwrite(save_path, img)
-    print('save detection to', save_path)
+        left_top_x = center_x - img_w / 2
+        left_top_y = center_y - img_h / 2
+        patch_color = bbox_colors[int(np.where(unique_labels == int(class_id))[0])]
+        bbox_patch = patches.Rectangle((left_top_x, left_top_y), img_w, img_h,
+                                 linewidth=2, edgecolor=patch_color, facecolor="none")
+        ax.add_patch(bbox_patch)
+        plt.text(left_top_x, left_top_y, s=class_names[int(class_id)], color="white", verticalalignment="top",
+                    bbox={"color": patch_color, "pad": 0})
+    # Save generated image with detections
+    plt.axis("off")
+    plt.gca().xaxis.set_major_locator(NullLocator())
+    plt.gca().yaxis.set_major_locator(NullLocator())
+    save_fname = os.path.join(save_path, img_path.split('/')[-1])
+    plt.savefig(save_fname, bbox_inches="tight", pad_inches=0.0)
+    print('saved detection to', save_fname)
+    plt.close()
+
+
+# def draw_detect_box_deprecate(img_path, predictions, names_file):
+#     def get_color(channel, offset, class_num):
+#         colors = torch.FloatTensor([[1, 0, 1], [0, 0, 1], [0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 0, 0]])
+#         ratio = float(offset) / class_num * 5
+#         i = int(math.floor(ratio))
+#         j = int(math.ceil(ratio))
+#         ratio = ratio - i
+#         r = (1 - ratio) * colors[i][channel] + ratio * colors[j][channel]
+#         return int(r * 255)
+#
+#     class_names = load_class_names(names_file)
+#
+#     def get_rgb(class_id):
+#         class_num = len(class_names)
+#         offset = class_id * 123457 % class_num
+#         red = get_color(2, offset, class_num)
+#         green = get_color(1, offset, class_num)
+#         blue = get_color(0, offset, class_num)
+#         rgb = (red, green, blue)
+#         return rgb
+#
+#     img = cv2.imread(img_path)
+#     save_path = 'detect-' + img_path.split('/')[-1]
+#     for prediction in predictions:
+#         left_top_x, left_top_y, right_bottom_x, right_bottom_y, class_id = prediction[0], prediction[1], prediction[2], \
+#                                                                            prediction[3], prediction[-1]
+#         color_tuple = get_rgb(class_id)
+#         cv2.rectangle(img, (left_top_x, left_top_y), (right_bottom_x, right_bottom_y), color_tuple, 4)
+#         cv2.putText(img, class_names[int(class_id)], (left_top_x, left_top_y + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+#                     color_tuple)
+#     cv2.imwrite(save_path, img)
+#     print('save detection to', save_path)
 
 
 def log_train_progress(epoch, batch_i, total_batch, lr, start_time, metrics):

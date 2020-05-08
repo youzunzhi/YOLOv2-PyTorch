@@ -95,6 +95,20 @@ names = data/coco.names
 backup = backup
 ```
 
+## Detection
+
+You can modify the configs in config/detect_cfg.py or in command line following the usage of yacs. For example:
+
+```shell
+python detect.py MODEL_CFG_FNAME pjreddie_files/yolov2.cfg \
+WEIGHTS_FNAME weights/yolov2.weights \
+IMG_PATH data/samples/field.jpg \
+CONF_THRESH 0.5
+```
+
+And you will get the result like this:
+
+<img src="data/results/field.jpg" />
 
 ## Evaluation
 

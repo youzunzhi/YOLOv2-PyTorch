@@ -25,7 +25,8 @@ class YOLOv2Model(object):
                                        weight_decay=0.0005)
             self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, self.cfg.TRAIN.LR_STEP_EPOCH, self.cfg.TRAIN.LR_STEP)
 
-    def detect(self, img_path):
+    def detect(self):
+        img_path = self.cfg.IMG_PATH
         self.network.eval()
 
         img = Image.open(img_path).convert('RGB')
@@ -35,8 +36,8 @@ class YOLOv2Model(object):
 
         with torch.no_grad():
             output = self.network(img)
-        predictions = non_max_suppression(output, self.cfg.CONF_THRESH, self.cfg.NMS_THRESH)
-        draw_detect_box(img_path, predictions[0], parse_data_cfg(self.cfg.DATA_CFG_FNAME)['names'])
+        predictions = non_max_suppression(output, self.cfg.CONF_THRESH, self.cfg.NMS_THRESH)[0]
+        draw_detect_box(img_path, predictions, parse_data_cfg(self.cfg.DATA_CFG_FNAME)['names'], self.cfg.OUTPUT_DIR)
 
     def eval(self, eval_dataloader):
         self.network.eval()

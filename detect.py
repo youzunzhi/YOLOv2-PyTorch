@@ -7,9 +7,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = detect_cfg.CUDA_ID
 
 def main():
     try:
-        cfg = prepare_experiment(detect_cfg, 'e')
+        cfg = prepare_experiment(detect_cfg, 'd')
         model = YOLOv2Model(cfg, training=False)
-        model.detect(detect_cfg.IMG_PATH)
+        model.detect()
     except KeyboardInterrupt:
         handle_keyboard_interruption(cfg)
     except:
